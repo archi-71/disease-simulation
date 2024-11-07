@@ -10,12 +10,12 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) {
-
         stage.setTitle("A Multi-Agent Simulation for Disease Spread");
         stage.setMinWidth(minWidth);
         stage.setMinHeight(minHeight);
 
-        Layout layout = new Layout();
+        Simulation simulation = new Simulation();
+        Layout layout = new Layout(stage, simulation);
         stage.setScene(layout.createScene());
         stage.show();
     }

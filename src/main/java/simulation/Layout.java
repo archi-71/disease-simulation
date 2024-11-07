@@ -2,23 +2,39 @@ package simulation;
 
 import javafx.application.Platform;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
+import javafx.stage.Stage;
 
 public class Layout {
 
+    private final double controlsHeight = 50;
     private final double minSplit = 0.1;
 
     private boolean isResizing = false;
     private double verticalSplit = 0.3;
     private double horizontalSplit = 0.6;
+
+    private Stage stage;
+    private Simulation simulation;
+
+    private ParamInputs inputParameters;
+    private Map map;
+
+    public Layout(Stage stg, Simulation sim) {
+        stage = stg;
+        simulation = sim;
+    }
 
     public Scene createScene() {
         // Default window size to full screen dimensions
@@ -28,22 +44,37 @@ public class Layout {
 
         // Create parameters section
         VBox parametersSection = new VBox();
-        parametersSection.setStyle("-fx-background-color: lightgrey;");
         parametersSection.setMinWidth(width * minSplit);
 
         Label parametersTitle = new Label("Parameters");
-        parametersSection.getChildren().addAll(parametersTitle);
+
+        inputParameters = new ParamInputs(stage);
+        ScrollPane parameters = new ScrollPane(inputParameters);
+        VBox.setVgrow(parameters, Priority.ALWAYS);
+
+        Button initialiseSimButton = new Button("Initialise Simulation");
+        initialiseSimButton.setOnAction(event -> {
+            simulation.initialise(inputParameters.getParameters());
+            map.initialise(simulation.getEnvironment());
+        });
+        HBox initialiseSim = new HBox(initialiseSimButton);
+        initialiseSim.setAlignment(Pos.CENTER);
+
+        parametersSection.getChildren().addAll(parametersTitle, parameters, initialiseSim);
 
         // Create controls section
         HBox controlsSection = new HBox();
-        controlsSection.setPrefHeight(50);
+        controlsSection.setMinHeight(controlsHeight);
 
         Label controlsTitle = new Label("Controls");
         controlsSection.getChildren().addAll(controlsTitle);
 
         // Create map section
-        Pane mapSection = new Pane();
+        map = new Map();
+        Pane mapSection = new Pane(map);
         mapSection.setMinHeight(height * minSplit);
+        map.prefWidthProperty().bind(mapSection.widthProperty());
+        map.prefHeightProperty().bind(mapSection.heightProperty());
 
         Label mapTitle = new Label("Map");
         mapSection.getChildren().addAll(mapTitle);
@@ -74,11 +105,13 @@ public class Layout {
         layout.getDividers().get(0).positionProperty().addListener((obs, oldPos, newPos) -> {
             if (!isResizing) {
                 verticalSplit = layout.getDividerPositions()[0];
+                map.resizeMap();
             }
         });
         outputSection.getDividers().get(0).positionProperty().addListener((obs, oldPos, newPos) -> {
             if (!isResizing) {
                 horizontalSplit = outputSection.getDividerPositions()[0];
+                map.resizeMap();
             }
         });
 
@@ -86,6 +119,7 @@ public class Layout {
         layout.widthProperty().addListener((obs, oldVal, newVal) -> {
             parametersSection.setMinWidth(scene.getWidth() * minSplit);
             layout.setDividerPositions(verticalSplit);
+            map.resizeMap();
         });
         outputSection.heightProperty().addListener((obs, oldVal, newVal) -> {
             mapSection.setMinWidth(scene.getWidth() * minSplit);
@@ -93,6 +127,12 @@ public class Layout {
             graphSection.setMinWidth(scene.getWidth() * minSplit);
             graphSection.setMinHeight(scene.getHeight() * minSplit);
             outputSection.setDividerPositions(horizontalSplit);
+            map.resizeMap();
+        });
+
+        // Check for full screen mode
+        stage.fullScreenProperty().addListener((obs, oldVal, newVal) -> {
+            map.resizeMap();
         });
 
         // Check when screen is being resized
