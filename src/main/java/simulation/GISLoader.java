@@ -12,33 +12,69 @@ import org.geotools.feature.FeatureCollection;
 
 public class GISLoader {
 
-    // Building types:
+    private FeatureFilters filters;
 
-    // residential
-    // schools
-    // universities
-    // hospitals
-    // recreation
-    // essential retail
-    // non-essential retail
-    // other essential workplaces
-    // other non-essential workplaces
-
-    private FeatureCollection<SimpleFeatureType, SimpleFeature> buildingFeatures;
+    private FeatureCollection<SimpleFeatureType, SimpleFeature> residentialFeatures;
+    private FeatureCollection<SimpleFeatureType, SimpleFeature> schoolFeatures;
+    private FeatureCollection<SimpleFeatureType, SimpleFeature> universityFeatures;
+    private FeatureCollection<SimpleFeatureType, SimpleFeature> hospitalFeatures;
+    private FeatureCollection<SimpleFeatureType, SimpleFeature> essentialAmenitiesFeatures;
+    private FeatureCollection<SimpleFeatureType, SimpleFeature> essentialWorkplacesFeatures;
+    private FeatureCollection<SimpleFeatureType, SimpleFeature> nonEssentialAmenitiesFeatures;
+    private FeatureCollection<SimpleFeatureType, SimpleFeature> nonEssentialWorkplacesFeatures;
     private FeatureCollection<SimpleFeatureType, SimpleFeature> roadFeatures;
 
-    public FeatureCollection<SimpleFeatureType, SimpleFeature> getBuildingFeatures() {
-        return buildingFeatures;
+    public FeatureCollection<SimpleFeatureType, SimpleFeature> getResidentialFeatures() {
+        return residentialFeatures;
+    }
+
+    public FeatureCollection<SimpleFeatureType, SimpleFeature> getSchoolFeatures() {
+        return schoolFeatures;
+    }
+
+    public FeatureCollection<SimpleFeatureType, SimpleFeature> getUniversityFeatures() {
+        return universityFeatures;
+    }
+
+    public FeatureCollection<SimpleFeatureType, SimpleFeature> getHospitalFeatures() {
+        return hospitalFeatures;
+    }
+
+    public FeatureCollection<SimpleFeatureType, SimpleFeature> getEssentialAmenitiesFeatures() {
+        return essentialAmenitiesFeatures;
+    }
+
+    public FeatureCollection<SimpleFeatureType, SimpleFeature> getEssentialWorkplacesFeatures() {
+        return essentialWorkplacesFeatures;
+    }
+
+    public FeatureCollection<SimpleFeatureType, SimpleFeature> getNonEssentialAmenitiesFeatures() {
+        return nonEssentialAmenitiesFeatures;
+    }
+
+    public FeatureCollection<SimpleFeatureType, SimpleFeature> getNonEssentialWorkplacesFeatures() {
+        return nonEssentialWorkplacesFeatures;
     }
 
     public FeatureCollection<SimpleFeatureType, SimpleFeature> getRoadFeatures() {
         return roadFeatures;
     }
 
+    public GISLoader() {
+        filters = new FeatureFilters();
+    }
+
     public boolean loadBuildings(File file) {
         try {
             FeatureSource<SimpleFeatureType, SimpleFeature> featureSource = loadShapefile(file);
-            buildingFeatures = featureSource.getFeatures();
+            residentialFeatures = featureSource.getFeatures(filters.getResidentialFilter());
+            schoolFeatures = featureSource.getFeatures(filters.getSchoolFilter());
+            universityFeatures = featureSource.getFeatures(filters.getUniversityFilter());
+            hospitalFeatures = featureSource.getFeatures(filters.getHospitalFilter());
+            essentialAmenitiesFeatures = featureSource.getFeatures(filters.getEssentialAmenitiesFilter());
+            essentialWorkplacesFeatures = featureSource.getFeatures(filters.getEssentialWorkplacesFilter());
+            nonEssentialAmenitiesFeatures = featureSource.getFeatures(filters.getNonEssentialAmenitiesFilter());
+            nonEssentialWorkplacesFeatures = featureSource.getFeatures(filters.getNonEssentialWorkplacesFilter());
             return true;
         } catch (Exception e) {
             System.err.println("Could not load buildings from file '" + file.getAbsolutePath() + "'");

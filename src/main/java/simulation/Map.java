@@ -62,24 +62,53 @@ public class Map extends Pane {
 
         mapContent = new MapContent();
 
-        FeatureLayer buildingLayer = new FeatureLayer(gisLoader.getBuildingFeatures(), createBuildingStyle());
-        mapContent.addLayer(buildingLayer);
+        FeatureLayer residentialLayer = new FeatureLayer(gisLoader.getResidentialFeatures(),
+                createBuildingStyle("#FF6F6F", "#B13C3C"));
+        mapContent.addLayer(residentialLayer);
 
-        Style roadStyle = SLD.createLineStyle(Color.green, 4);
+        FeatureLayer schoolLayer = new FeatureLayer(gisLoader.getSchoolFeatures(),
+                createBuildingStyle("#FFA500", "#CC7A00"));
+        mapContent.addLayer(schoolLayer);
+
+        FeatureLayer universityLayer = new FeatureLayer(gisLoader.getUniversityFeatures(),
+                createBuildingStyle("#FFEB3B", "#C8A900"));
+        mapContent.addLayer(universityLayer);
+
+        FeatureLayer hospitalLayer = new FeatureLayer(gisLoader.getHospitalFeatures(),
+                createBuildingStyle("#9C27B0", "#6A1B9A"));
+        mapContent.addLayer(hospitalLayer);
+
+        FeatureLayer essentialAmenitiesLayer = new FeatureLayer(gisLoader.getEssentialAmenitiesFeatures(),
+                createBuildingStyle("#1976D2", "#0D47A1"));
+        mapContent.addLayer(essentialAmenitiesLayer);
+
+        FeatureLayer essentialWorkplacesLayer = new FeatureLayer(gisLoader.getEssentialWorkplacesFeatures(),
+                createBuildingStyle("#388E3C", "#1B5E20"));
+        mapContent.addLayer(essentialWorkplacesLayer);
+
+        FeatureLayer nonEssentialAmenitiesLayer = new FeatureLayer(gisLoader.getNonEssentialAmenitiesFeatures(),
+                createBuildingStyle("#4FC3F7", "#0288D1"));
+        mapContent.addLayer(nonEssentialAmenitiesLayer);
+
+        FeatureLayer nonEssentialWorkplacesLayer = new FeatureLayer(gisLoader.getNonEssentialWorkplacesFeatures(),
+                createBuildingStyle("#8BC34A", "#5A8C2B"));
+        mapContent.addLayer(nonEssentialWorkplacesLayer);
+
+        Style roadStyle = SLD.createLineStyle(Color.gray, 4);
         FeatureLayer roadLayer = new FeatureLayer(gisLoader.getRoadFeatures(), roadStyle);
         mapContent.addLayer(roadLayer);
     }
 
-    private Style createBuildingStyle() {
+    private Style createBuildingStyle(String fillColour, String outlineColour) {
         StyleFactory styleFactory = CommonFactoryFinder.getStyleFactory();
         FilterFactory filterFactory = CommonFactoryFinder.getFilterFactory();
 
         Fill fill = styleFactory.createFill(
-                filterFactory.literal("#D3D3D3"),
+                filterFactory.literal(fillColour),
                 filterFactory.literal(1.0));
 
         Stroke stroke = styleFactory.createStroke(
-                filterFactory.literal("#A9A9A9"),
+                filterFactory.literal(outlineColour),
                 filterFactory.literal(2.0));
 
         PolygonSymbolizer polygonSymbolizer = styleFactory.createPolygonSymbolizer(stroke, fill, null);
@@ -199,9 +228,11 @@ public class Map extends Pane {
 
     // Update map to keep focus centred when resizing
     public void resizeMap() {
-        minZoom = Math.min(getWidth(), getHeight()) / resolution;
-        scaleFactor = Math.max(minZoom, scaleFactor);
         canvas.setTranslateX(getWidth() / 2 - focusX * resolution);
         canvas.setTranslateY(getHeight() / 2 - focusY * resolution);
+        minZoom = Math.min(getWidth(), getHeight()) / resolution;
+        scaleFactor = Math.max(minZoom, scaleFactor);
+        canvas.setScaleX(scaleFactor);
+        canvas.setScaleY(scaleFactor);
     }
 }
