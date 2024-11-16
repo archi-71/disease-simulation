@@ -14,11 +14,14 @@ import org.jfree.fx.FXGraphics2D;
 import org.geotools.api.filter.FilterFactory;
 import org.geotools.api.style.FeatureTypeStyle;
 import org.geotools.api.style.Fill;
+import org.geotools.api.style.Font;
+import org.geotools.api.style.PointPlacement;
 import org.geotools.api.style.PolygonSymbolizer;
 import org.geotools.api.style.Rule;
 import org.geotools.api.style.Stroke;
 import org.geotools.api.style.Style;
 import org.geotools.api.style.StyleFactory;
+import org.geotools.api.style.TextSymbolizer;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.map.FeatureLayer;
 import org.geotools.map.MapContent;
@@ -62,37 +65,11 @@ public class Map extends Pane {
 
         mapContent = new MapContent();
 
-        FeatureLayer residentialLayer = new FeatureLayer(gisLoader.getResidentialFeatures(),
-                createBuildingStyle("#FF6F6F", "#B13C3C"));
-        mapContent.addLayer(residentialLayer);
-
-        FeatureLayer schoolLayer = new FeatureLayer(gisLoader.getSchoolFeatures(),
-                createBuildingStyle("#FFA500", "#CC7A00"));
-        mapContent.addLayer(schoolLayer);
-
-        FeatureLayer universityLayer = new FeatureLayer(gisLoader.getUniversityFeatures(),
-                createBuildingStyle("#FFEB3B", "#C8A900"));
-        mapContent.addLayer(universityLayer);
-
-        FeatureLayer hospitalLayer = new FeatureLayer(gisLoader.getHospitalFeatures(),
-                createBuildingStyle("#9C27B0", "#6A1B9A"));
-        mapContent.addLayer(hospitalLayer);
-
-        FeatureLayer essentialAmenitiesLayer = new FeatureLayer(gisLoader.getEssentialAmenitiesFeatures(),
-                createBuildingStyle("#1976D2", "#0D47A1"));
-        mapContent.addLayer(essentialAmenitiesLayer);
-
-        FeatureLayer essentialWorkplacesLayer = new FeatureLayer(gisLoader.getEssentialWorkplacesFeatures(),
-                createBuildingStyle("#388E3C", "#1B5E20"));
-        mapContent.addLayer(essentialWorkplacesLayer);
-
-        FeatureLayer nonEssentialAmenitiesLayer = new FeatureLayer(gisLoader.getNonEssentialAmenitiesFeatures(),
-                createBuildingStyle("#4FC3F7", "#0288D1"));
-        mapContent.addLayer(nonEssentialAmenitiesLayer);
-
-        FeatureLayer nonEssentialWorkplacesLayer = new FeatureLayer(gisLoader.getNonEssentialWorkplacesFeatures(),
-                createBuildingStyle("#8BC34A", "#5A8C2B"));
-        mapContent.addLayer(nonEssentialWorkplacesLayer);
+        for (BuildingType type : BuildingType.values()) {
+            Style style = createBuildingStyle(type.getFillColour(), type.getOutlineColour());
+            FeatureLayer layer = new FeatureLayer(gisLoader.getBuildingFeatures(type), style);
+            mapContent.addLayer(layer);
+        }
 
         Style roadStyle = SLD.createLineStyle(Color.gray, 4);
         FeatureLayer roadLayer = new FeatureLayer(gisLoader.getRoadFeatures(), roadStyle);
@@ -113,8 +90,31 @@ public class Map extends Pane {
 
         PolygonSymbolizer polygonSymbolizer = styleFactory.createPolygonSymbolizer(stroke, fill, null);
 
+        Font font = styleFactory.createFont(
+                filterFactory.literal("Arial"),
+                filterFactory.literal("normal"),
+                filterFactory.literal(
+                    "normal"),
+                filterFactory.literal(8));
+        Fill textFill = styleFactory.createFill(filterFactory.literal("#000000"));
+        TextSymbolizer textSymbolizer = styleFactory.createTextSymbolizer(
+                textFill,
+                new Font[] { font },
+                null,
+                filterFactory.property("osm_id"),
+                null,
+                null);
+
+        textSymbolizer.setPriority(filterFactory.literal(100000));
+        PointPlacement pointPlacement = styleFactory.createPointPlacement(
+                styleFactory.createAnchorPoint(filterFactory.literal(0.5), filterFactory.literal(0.5)),
+                styleFactory.createDisplacement(filterFactory.literal(0), filterFactory.literal(0)),
+                filterFactory.literal(0));
+        textSymbolizer.setLabelPlacement(pointPlacement);
+
         Rule rule = styleFactory.createRule();
         rule.symbolizers().add(polygonSymbolizer);
+        rule.symbolizers().add(textSymbolizer);
 
         FeatureTypeStyle featureTypeStyle = styleFactory.createFeatureTypeStyle();
         featureTypeStyle.rules().add(rule);

@@ -104,8 +104,10 @@ public class FeatureFilters {
         List<Filter> filters = new ArrayList<>();
         filters.add(F.equals(F.property("building"), F.literal("school")));
         filters.add(F.equals(F.property("building"), F.literal("kindergarten")));
+        filters.add(F.equals(F.property("building"), F.literal("college")));
         filters.add(F.equals(F.property("amenity"), F.literal("school")));
         filters.add(F.equals(F.property("amenity"), F.literal("kindergarten")));
+        filters.add(F.equals(F.property("amenity"), F.literal("college")));
 
         return F.and(isBuilding(), F.or(filters));
     }
@@ -113,10 +115,8 @@ public class FeatureFilters {
     private Filter isUniversity() {
         List<Filter> filters = new ArrayList<>();
         filters.add(F.equals(F.property("building"), F.literal("university")));
-        filters.add(F.equals(F.property("building"), F.literal("college")));
         filters.add(F.equals(F.property("amenity"), F.literal("university")));
 
-        filters.add(F.equals(F.property("amenity"), F.literal("college")));
         return F.and(isBuilding(), F.or(filters));
     }
 
