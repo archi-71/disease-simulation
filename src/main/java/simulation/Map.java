@@ -31,6 +31,7 @@ import org.geotools.styling.SLD;
 public class Map extends Pane {
 
     private final int resolution = 4096;
+    private final int individualSize = 10;
     private final double zoomSpeed = 0.001;
 
     private Canvas canvas;
@@ -50,14 +51,16 @@ public class Map extends Pane {
         canvas = new Canvas(resolution, resolution);
     }
 
-    public void initialise(Environment environment) {
-        loadMapContent(environment.getGISLoader());
-        drawMap();
+    public void initialise(Environment environment, Population population) {
+        drawEnvironment(environment);
+        drawPopulation(population);
         resetMap();
         initialiseControls();
     }
 
-    private void loadMapContent(GISLoader gisLoader) {
+    private void drawEnvironment(Environment environment) {
+        GISLoader gisLoader = environment.getGISLoader();
+
         if (mapContent != null) {
             getChildren().clear();
             mapContent.dispose();
@@ -74,6 +77,16 @@ public class Map extends Pane {
         Style roadStyle = SLD.createLineStyle(Color.gray, 4);
         FeatureLayer roadLayer = new FeatureLayer(gisLoader.getRoadFeatures(), roadStyle);
         mapContent.addLayer(roadLayer);
+
+        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+        Rectangle mapRect = mapContent.getViewport().getScreenArea();
+        mapRect.setSize(resolution, resolution);
+        StreamingRenderer draw = new StreamingRenderer();
+        draw.setMapContent(mapContent);
+        FXGraphics2D graphics = new FXGraphics2D(graphicsContext);
+        draw.paint(graphics, mapRect, mapContent.getViewport().getBounds());
+
+        getChildren().add(canvas);
     }
 
     private Style createBuildingStyle(String fillColour, String outlineColour) {
@@ -94,7 +107,7 @@ public class Map extends Pane {
                 filterFactory.literal("Arial"),
                 filterFactory.literal("normal"),
                 filterFactory.literal(
-                    "normal"),
+                        "normal"),
                 filterFactory.literal(8));
         Fill textFill = styleFactory.createFill(filterFactory.literal("#000000"));
         TextSymbolizer textSymbolizer = styleFactory.createTextSymbolizer(
@@ -105,16 +118,18 @@ public class Map extends Pane {
                 null,
                 null);
 
-        textSymbolizer.setPriority(filterFactory.literal(100000));
-        PointPlacement pointPlacement = styleFactory.createPointPlacement(
-                styleFactory.createAnchorPoint(filterFactory.literal(0.5), filterFactory.literal(0.5)),
-                styleFactory.createDisplacement(filterFactory.literal(0), filterFactory.literal(0)),
-                filterFactory.literal(0));
-        textSymbolizer.setLabelPlacement(pointPlacement);
+        // textSymbolizer.setPriority(filterFactory.literal(100000));
+        // PointPlacement pointPlacement = styleFactory.createPointPlacement(
+        // styleFactory.createAnchorPoint(filterFactory.literal(0.5),
+        // filterFactory.literal(0.5)),
+        // styleFactory.createDisplacement(filterFactory.literal(0),
+        // filterFactory.literal(0)),
+        // filterFactory.literal(0));
+        // textSymbolizer.setLabelPlacement(pointPlacement);
 
         Rule rule = styleFactory.createRule();
         rule.symbolizers().add(polygonSymbolizer);
-        rule.symbolizers().add(textSymbolizer);
+        // rule.symbolizers().add(textSymbolizer);
 
         FeatureTypeStyle featureTypeStyle = styleFactory.createFeatureTypeStyle();
         featureTypeStyle.rules().add(rule);
@@ -124,16 +139,40 @@ public class Map extends Pane {
         return style;
     }
 
-    private void drawMap() {
+    private void drawPopulation(Population population) {
         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-        Rectangle mapRect = mapContent.getViewport().getScreenArea();
-        mapRect.setSize(resolution, resolution);
-        StreamingRenderer draw = new StreamingRenderer();
-        draw.setMapContent(mapContent);
-        FXGraphics2D graphics = new FXGraphics2D(graphicsContext);
-        draw.paint(graphics, mapRect, mapContent.getViewport().getBounds());
+        graphicsContext.setFill(javafx.scene.paint.Color.BLACK);
+        double centreX = mapContent.getMaxBounds().getCenterX();
+        double centreY = mapContent.getMaxBounds().getCenterY();
+        double width = mapContent.getMaxBounds().getWidth();
+        double height = mapContent.getMaxBounds().getHeight();
+        for (Individual individual : population.getIndividuals()) {
+            double x = resolution / 2 + resolution * (individual.getPosition().getX() - centreX) / width;
+            double y = resolution / 2 - resolution * (individual.getPosition().getY() - centreY) / height;
+            graphicsContext.fillOval(x - individualSize / 2, y - individualSize / 2, individualSize, individualSize);
+        }
+    }
 
-        getChildren().add(canvas);
+    private void resetMap() {
+        // Reset scale
+        scaleFactor = Math.max(getWidth(), getHeight()) / resolution;
+        canvas.setScaleX(scaleFactor);
+        canvas.setScaleY(scaleFactor);
+
+        // Reset focus to map centre
+        focusX = 0.5;
+        focusY = 0.5;
+        resizeMap();
+    }
+
+    // Update map to keep focus centred when resizing
+    public void resizeMap() {
+        canvas.setTranslateX(getWidth() / 2 - focusX * resolution);
+        canvas.setTranslateY(getHeight() / 2 - focusY * resolution);
+        minZoom = Math.min(getWidth(), getHeight()) / resolution;
+        scaleFactor = Math.max(minZoom, scaleFactor);
+        canvas.setScaleX(scaleFactor);
+        canvas.setScaleY(scaleFactor);
     }
 
     private void initialiseControls() {
@@ -212,27 +251,5 @@ public class Map extends Pane {
                 }
             }
         });
-    }
-
-    private void resetMap() {
-        // Reset scale
-        scaleFactor = Math.max(getWidth(), getHeight()) / resolution;
-        canvas.setScaleX(scaleFactor);
-        canvas.setScaleY(scaleFactor);
-
-        // Reset focus to map centre
-        focusX = 0.5;
-        focusY = 0.5;
-        resizeMap();
-    }
-
-    // Update map to keep focus centred when resizing
-    public void resizeMap() {
-        canvas.setTranslateX(getWidth() / 2 - focusX * resolution);
-        canvas.setTranslateY(getHeight() / 2 - focusY * resolution);
-        minZoom = Math.min(getWidth(), getHeight()) / resolution;
-        scaleFactor = Math.max(minZoom, scaleFactor);
-        canvas.setScaleX(scaleFactor);
-        canvas.setScaleY(scaleFactor);
     }
 }

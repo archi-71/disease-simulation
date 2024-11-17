@@ -2,9 +2,7 @@ package simulation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Stack;
 
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.feature.FeatureIterator;
@@ -24,11 +22,14 @@ public class Environment {
 
     private EnvironmentParams parameters;
     private GISLoader gisLoader;
-
     private HashMap<BuildingType, List<Building>> buildings;
 
     public GISLoader getGISLoader() {
         return gisLoader;
+    }
+
+    public List<Building> getBuildings(BuildingType type) {
+        return buildings.get(type);
     }
 
     public Environment(EnvironmentParams params) {
@@ -59,9 +60,9 @@ public class Environment {
                 String key = coordinate.x + "," + coordinate.y;
                 Node node = roadNodes.get(key);
                 if (node == null) {
-                    node = new Node();
-                    roadNodes.put(key, node);
                     Point point = geometryFactory.createPoint(coordinate);
+                    node = new Node(point);
+                    roadNodes.put(key, node);
                     index.insert(point.getEnvelopeInternal(), point);
                 }
                 if (prev != null) {
@@ -92,7 +93,7 @@ public class Environment {
                 });
                 String key = nearestRoad.getX() + "," + nearestRoad.getY();
                 Node node = roadNodes.get(key);
-                Building building = new Building(feature.getAttribute("osm_id").toString(), type);
+                Building building = new Building(polygon, feature.getAttribute("osm_id").toString(), type);
                 building.addNeighbour(node);
                 node.addNeighbour(building);
                 buildingList.add(building);

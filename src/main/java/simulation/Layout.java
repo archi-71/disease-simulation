@@ -55,7 +55,7 @@ public class Layout {
         Button initialiseSimButton = new Button("Initialise Simulation");
         initialiseSimButton.setOnAction(event -> {
             simulation.initialise(inputParameters.getParameters());
-            map.initialise(simulation.getEnvironment());
+            map.initialise(simulation.getEnvironment(), simulation.getPopulation());
         });
         HBox initialiseSim = new HBox(initialiseSimButton);
         initialiseSim.setAlignment(Pos.CENTER);

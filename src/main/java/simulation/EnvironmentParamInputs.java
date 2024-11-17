@@ -12,14 +12,7 @@ import javafx.stage.Stage;
 
 public class EnvironmentParamInputs extends VBox {
 
-    private EnvironmentParams parameters;
-
-    public EnvironmentParams getParameters() {
-        return parameters;
-    }
-
-    public EnvironmentParamInputs(Stage stage) {
-        parameters = new EnvironmentParams();
+    public EnvironmentParamInputs(EnvironmentParams parameters, Stage stage) {
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new ExtensionFilter("Shapefiles (*.shp)", "*.shp"));

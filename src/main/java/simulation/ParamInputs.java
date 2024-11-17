@@ -1,5 +1,6 @@
 package simulation;
 
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -14,8 +15,14 @@ public class ParamInputs extends VBox {
     public ParamInputs(Stage stage) {
         parameters = new SimulationParams();
 
-        EnvironmentParamInputs environmentInputs = new EnvironmentParamInputs(stage);
+        Label environmentTitle = new Label("Environment");
+        environmentTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        EnvironmentParamInputs environmentInputs = new EnvironmentParamInputs(parameters.getEnvironmentParams(), stage);
+        getChildren().addAll(environmentTitle, environmentInputs);
 
-        getChildren().addAll(environmentInputs);
+        Label populationTitle = new Label("Population");
+        populationTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        PopulationParamInputs populationInputs = new PopulationParamInputs(parameters.getPopulationParams());
+        getChildren().addAll(populationTitle, populationInputs);
     }
 }
