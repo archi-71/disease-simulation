@@ -1,4 +1,4 @@
-package simulation;
+package simulation.population;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +12,9 @@ import java.util.Set;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Point;
+
+import simulation.environment.Building;
+import simulation.environment.Node;
 
 public class Individual {
 
@@ -34,23 +37,24 @@ public class Individual {
     }
 
     public Individual(Building home, Building work) {
-        this.schedule = new Schedule();
+        schedule = new Schedule();
         this.home = home;
         this.work = work;
-        this.homeToWork = findRoute(home, work);
+        homeToWork = findRoute(home, work);
         if (homeToWork != null) {
             this.workToHome = new ArrayList<>(homeToWork);
             java.util.Collections.reverse(workToHome);
         }
 
-        this.activity = Activity.SLEEP;
-        this.position = home.getPoint();
-        this.location = home;
+        activity = Activity.SLEEP;
+        position = home.getPoint();
+        location = home;
     }
 
     public void reset() {
-        location = home;
+        activity = Activity.SLEEP;
         position = location.getPoint();
+        location = home;
         route = null;
     }
 

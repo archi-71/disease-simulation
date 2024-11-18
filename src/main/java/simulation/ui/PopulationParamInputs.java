@@ -1,9 +1,10 @@
-package simulation;
+package simulation.ui;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import simulation.params.PopulationParams;
 
 public class PopulationParamInputs extends VBox {
 

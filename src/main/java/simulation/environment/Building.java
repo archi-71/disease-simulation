@@ -1,4 +1,4 @@
-package simulation;
+package simulation.environment;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;

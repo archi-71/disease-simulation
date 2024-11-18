@@ -1,4 +1,4 @@
-package simulation;
+package simulation.environment;
 
 import java.io.File;
 import java.io.IOException;

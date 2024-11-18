@@ -1,8 +1,12 @@
-package simulation;
+package simulation.core;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import simulation.environment.Environment;
+import simulation.params.SimulationParams;
+import simulation.population.Population;
 
 public class Simulation {
 

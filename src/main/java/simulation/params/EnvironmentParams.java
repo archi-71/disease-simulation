@@ -1,4 +1,4 @@
-package simulation;
+package simulation.params;
 
 import java.io.File;
 

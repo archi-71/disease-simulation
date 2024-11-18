@@ -1,4 +1,4 @@
-package simulation;
+package simulation.params;
 
 public class SimulationParams {
 

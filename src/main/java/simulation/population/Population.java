@@ -1,7 +1,12 @@
-package simulation;
+package simulation.population;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import simulation.environment.Building;
+import simulation.environment.BuildingType;
+import simulation.environment.Environment;
+import simulation.params.PopulationParams;
 
 public class Population {
 

@@ -1,10 +1,11 @@
-package simulation;
+package simulation.ui;
 
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import simulation.core.Simulation;
 
 public class SimulationControls extends HBox {
 

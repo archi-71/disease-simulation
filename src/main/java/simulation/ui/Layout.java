@@ -1,4 +1,4 @@
-package simulation;
+package simulation.ui;
 
 import javafx.application.Platform;
 import javafx.geometry.Orientation;
@@ -15,6 +15,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import simulation.core.Simulation;
 
 public class Layout {
 

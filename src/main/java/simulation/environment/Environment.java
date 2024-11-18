@@ -1,4 +1,4 @@
-package simulation;
+package simulation.environment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +17,8 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.index.strtree.ItemBoundable;
 import org.locationtech.jts.index.strtree.ItemDistance;
 import org.locationtech.jts.index.strtree.STRtree;
+
+import simulation.params.EnvironmentParams;
 
 public class Environment {
 

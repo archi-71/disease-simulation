@@ -1,4 +1,4 @@
-package simulation;
+package simulation.ui;
 
 import java.io.File;
 
@@ -8,6 +8,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
+import simulation.params.EnvironmentParams;
 import javafx.stage.Stage;
 
 public class EnvironmentParamInputs extends VBox {

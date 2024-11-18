@@ -1,8 +1,9 @@
-package simulation;
+package simulation.ui;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import simulation.params.SimulationParams;
 
 public class ParamInputs extends VBox {
 

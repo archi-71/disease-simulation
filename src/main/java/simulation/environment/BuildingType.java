@@ -1,4 +1,4 @@
-package simulation;
+package simulation.environment;
 
 public enum BuildingType {
 

@@ -1,7 +1,8 @@
-package simulation;
+package simulation.core;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
+import simulation.ui.Layout;
 
 public class App extends Application {
 

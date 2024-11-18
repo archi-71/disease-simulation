@@ -1,4 +1,4 @@
-package simulation;
+package simulation.ui;
 
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -9,6 +9,12 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
+import simulation.core.Simulation;
+import simulation.environment.BuildingType;
+import simulation.environment.Environment;
+import simulation.environment.GISLoader;
+import simulation.population.Individual;
+import simulation.population.Population;
 
 import org.jfree.fx.FXGraphics2D;
 import org.geotools.api.filter.FilterFactory;
