@@ -14,14 +14,11 @@ import org.jfree.fx.FXGraphics2D;
 import org.geotools.api.filter.FilterFactory;
 import org.geotools.api.style.FeatureTypeStyle;
 import org.geotools.api.style.Fill;
-import org.geotools.api.style.Font;
-import org.geotools.api.style.PointPlacement;
 import org.geotools.api.style.PolygonSymbolizer;
 import org.geotools.api.style.Rule;
 import org.geotools.api.style.Stroke;
 import org.geotools.api.style.Style;
 import org.geotools.api.style.StyleFactory;
-import org.geotools.api.style.TextSymbolizer;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.map.FeatureLayer;
 import org.geotools.map.MapContent;
@@ -30,11 +27,12 @@ import org.geotools.styling.SLD;
 
 public class Map extends Pane {
 
-    private final int resolution = 4096;
+    private final int resolution = 2048;
     private final int individualSize = 10;
-    private final double zoomSpeed = 0.001;
+    private final double zoomSpeed = 0.0008;
 
-    private Canvas canvas;
+    private Canvas environmentCanvas;
+    private Canvas populationCanvas;
     private MapContent mapContent;
 
     private double baseDragX;
@@ -48,21 +46,37 @@ public class Map extends Pane {
     private double minZoom;
 
     public Map() {
-        canvas = new Canvas(resolution, resolution);
+        environmentCanvas = new Canvas(resolution, resolution);
+        populationCanvas = new Canvas(resolution, resolution);
+        getChildren().addAll(environmentCanvas, populationCanvas);
     }
 
-    public void initialise(Environment environment, Population population) {
-        drawEnvironment(environment);
-        drawPopulation(population);
+    public void initialise(Simulation simulation) {
+        drawEnvironment(simulation.getEnvironment());
+        drawPopulation(simulation.getPopulation());
         resetMap();
         initialiseControls();
+    }
+
+    public void drawPopulation(Population population) {
+        double centreX = mapContent.getMaxBounds().getCenterX();
+        double centreY = mapContent.getMaxBounds().getCenterY();
+        double width = mapContent.getMaxBounds().getWidth();
+        double height = mapContent.getMaxBounds().getHeight();
+        GraphicsContext graphicsContext = populationCanvas.getGraphicsContext2D();
+        graphicsContext.setFill(javafx.scene.paint.Color.BLACK);
+        graphicsContext.clearRect(0, 0, resolution, resolution);
+        for (Individual individual : population.getIndividuals()) {
+            double x = resolution / 2 + resolution * (individual.getPosition().getX() - centreX) / width;
+            double y = resolution / 2 - resolution * (individual.getPosition().getY() - centreY) / height;
+            graphicsContext.fillOval(x - individualSize / 2, y - individualSize / 2, individualSize, individualSize);
+        }
     }
 
     private void drawEnvironment(Environment environment) {
         GISLoader gisLoader = environment.getGISLoader();
 
         if (mapContent != null) {
-            getChildren().clear();
             mapContent.dispose();
         }
 
@@ -78,15 +92,13 @@ public class Map extends Pane {
         FeatureLayer roadLayer = new FeatureLayer(gisLoader.getRoadFeatures(), roadStyle);
         mapContent.addLayer(roadLayer);
 
-        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+        GraphicsContext graphicsContext = environmentCanvas.getGraphicsContext2D();
         Rectangle mapRect = mapContent.getViewport().getScreenArea();
         mapRect.setSize(resolution, resolution);
         StreamingRenderer draw = new StreamingRenderer();
         draw.setMapContent(mapContent);
         FXGraphics2D graphics = new FXGraphics2D(graphicsContext);
         draw.paint(graphics, mapRect, mapContent.getViewport().getBounds());
-
-        getChildren().add(canvas);
     }
 
     private Style createBuildingStyle(String fillColour, String outlineColour) {
@@ -103,33 +115,8 @@ public class Map extends Pane {
 
         PolygonSymbolizer polygonSymbolizer = styleFactory.createPolygonSymbolizer(stroke, fill, null);
 
-        Font font = styleFactory.createFont(
-                filterFactory.literal("Arial"),
-                filterFactory.literal("normal"),
-                filterFactory.literal(
-                        "normal"),
-                filterFactory.literal(8));
-        Fill textFill = styleFactory.createFill(filterFactory.literal("#000000"));
-        TextSymbolizer textSymbolizer = styleFactory.createTextSymbolizer(
-                textFill,
-                new Font[] { font },
-                null,
-                filterFactory.property("osm_id"),
-                null,
-                null);
-
-        // textSymbolizer.setPriority(filterFactory.literal(100000));
-        // PointPlacement pointPlacement = styleFactory.createPointPlacement(
-        // styleFactory.createAnchorPoint(filterFactory.literal(0.5),
-        // filterFactory.literal(0.5)),
-        // styleFactory.createDisplacement(filterFactory.literal(0),
-        // filterFactory.literal(0)),
-        // filterFactory.literal(0));
-        // textSymbolizer.setLabelPlacement(pointPlacement);
-
         Rule rule = styleFactory.createRule();
         rule.symbolizers().add(polygonSymbolizer);
-        // rule.symbolizers().add(textSymbolizer);
 
         FeatureTypeStyle featureTypeStyle = styleFactory.createFeatureTypeStyle();
         featureTypeStyle.rules().add(rule);
@@ -139,25 +126,13 @@ public class Map extends Pane {
         return style;
     }
 
-    private void drawPopulation(Population population) {
-        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-        graphicsContext.setFill(javafx.scene.paint.Color.BLACK);
-        double centreX = mapContent.getMaxBounds().getCenterX();
-        double centreY = mapContent.getMaxBounds().getCenterY();
-        double width = mapContent.getMaxBounds().getWidth();
-        double height = mapContent.getMaxBounds().getHeight();
-        for (Individual individual : population.getIndividuals()) {
-            double x = resolution / 2 + resolution * (individual.getPosition().getX() - centreX) / width;
-            double y = resolution / 2 - resolution * (individual.getPosition().getY() - centreY) / height;
-            graphicsContext.fillOval(x - individualSize / 2, y - individualSize / 2, individualSize, individualSize);
-        }
-    }
-
     private void resetMap() {
         // Reset scale
         scaleFactor = Math.max(getWidth(), getHeight()) / resolution;
-        canvas.setScaleX(scaleFactor);
-        canvas.setScaleY(scaleFactor);
+        environmentCanvas.setScaleX(scaleFactor);
+        environmentCanvas.setScaleY(scaleFactor);
+        populationCanvas.setScaleX(scaleFactor);
+        populationCanvas.setScaleY(scaleFactor);
 
         // Reset focus to map centre
         focusX = 0.5;
@@ -167,12 +142,18 @@ public class Map extends Pane {
 
     // Update map to keep focus centred when resizing
     public void resizeMap() {
-        canvas.setTranslateX(getWidth() / 2 - focusX * resolution);
-        canvas.setTranslateY(getHeight() / 2 - focusY * resolution);
+        environmentCanvas.setTranslateX(getWidth() / 2 - focusX * resolution);
+        environmentCanvas.setTranslateY(getHeight() / 2 - focusY * resolution);
+        populationCanvas.setTranslateX(getWidth() / 2 - focusX * resolution);
+        populationCanvas.setTranslateY(getHeight() / 2 - focusY * resolution);
+
         minZoom = Math.min(getWidth(), getHeight()) / resolution;
         scaleFactor = Math.max(minZoom, scaleFactor);
-        canvas.setScaleX(scaleFactor);
-        canvas.setScaleY(scaleFactor);
+
+        environmentCanvas.setScaleX(scaleFactor);
+        environmentCanvas.setScaleY(scaleFactor);
+        populationCanvas.setScaleX(scaleFactor);
+        populationCanvas.setScaleY(scaleFactor);
     }
 
     private void initialiseControls() {
@@ -183,8 +164,8 @@ public class Map extends Pane {
             public void handle(MouseEvent event) {
                 baseDragX = event.getSceneX();
                 baseDragY = event.getSceneY();
-                dragStartX = canvas.getTranslateX();
-                dragStartY = canvas.getTranslateY();
+                dragStartX = environmentCanvas.getTranslateX();
+                dragStartY = environmentCanvas.getTranslateY();
                 event.consume();
             }
         });
@@ -195,10 +176,12 @@ public class Map extends Pane {
             public void handle(MouseEvent event) {
                 double difX = event.getSceneX() - baseDragX;
                 double difY = event.getSceneY() - baseDragY;
-                canvas.setTranslateX(dragStartX + difX);
-                canvas.setTranslateY(dragStartY + difY);
-                focusX = (getWidth() / 2 - canvas.getTranslateX()) / resolution;
-                focusY = (getHeight() / 2 - canvas.getTranslateY()) / resolution;
+                environmentCanvas.setTranslateX(dragStartX + difX);
+                environmentCanvas.setTranslateY(dragStartY + difY);
+                populationCanvas.setTranslateX(dragStartX + difX);
+                populationCanvas.setTranslateY(dragStartY + difY);
+                focusX = (getWidth() / 2 - environmentCanvas.getTranslateX()) / resolution;
+                focusY = (getHeight() / 2 - environmentCanvas.getTranslateY()) / resolution;
             }
         });
 
@@ -221,31 +204,39 @@ public class Map extends Pane {
                 if (deltaY != 0) {
                     // Get old mouse position
                     double oldMouseX = (event.getX() / scaleFactor
-                            - (canvas.getTranslateX() + resolution * (1 - scaleFactor) / 2)
+                            - (environmentCanvas.getTranslateX() + resolution * (1 - scaleFactor) / 2)
                                     / scaleFactor);
                     double oldMouseY = (event.getY() / scaleFactor
-                            - (canvas.getTranslateY() + resolution * (1 - scaleFactor) / 2)
+                            - (environmentCanvas.getTranslateY() + resolution * (1 - scaleFactor) / 2)
                                     / scaleFactor);
 
                     // Scale map
                     scaleFactor = Math.max(minZoom, Math.min(maxZoom, scaleFactor * (1 +
                             zoomSpeed * deltaY)));
-                    canvas.setScaleX(scaleFactor);
-                    canvas.setScaleY(scaleFactor);
+                    environmentCanvas.setScaleX(scaleFactor);
+                    environmentCanvas.setScaleY(scaleFactor);
+                    populationCanvas.setScaleX(scaleFactor);
+                    populationCanvas.setScaleY(scaleFactor);
 
                     // Get new mouse position
                     double newMouseX = (event.getX() / scaleFactor
-                            - (canvas.getTranslateX() + resolution * (1 - scaleFactor) / 2)
+                            - (environmentCanvas.getTranslateX() + resolution * (1 - scaleFactor) / 2)
                                     / scaleFactor);
                     double newMouseY = (event.getY() / scaleFactor
-                            - (canvas.getTranslateY() + resolution * (1 - scaleFactor) / 2)
+                            - (environmentCanvas.getTranslateY() + resolution * (1 - scaleFactor) / 2)
                                     / scaleFactor);
 
                     // Translate canvas to centre the scaling on the mouse position
-                    canvas.setTranslateX(scaleFactor * (newMouseX - oldMouseX) + canvas.getTranslateX());
-                    canvas.setTranslateY(scaleFactor * (newMouseY - oldMouseY) + canvas.getTranslateY());
-                    focusX = (getWidth() / 2 - canvas.getTranslateX()) / resolution;
-                    focusY = (getHeight() / 2 - canvas.getTranslateY()) / resolution;
+                    environmentCanvas
+                            .setTranslateX(scaleFactor * (newMouseX - oldMouseX) + environmentCanvas.getTranslateX());
+                    environmentCanvas
+                            .setTranslateY(scaleFactor * (newMouseY - oldMouseY) + environmentCanvas.getTranslateY());
+                    populationCanvas
+                            .setTranslateX(scaleFactor * (newMouseX - oldMouseX) + populationCanvas.getTranslateX());
+                    populationCanvas
+                            .setTranslateY(scaleFactor * (newMouseY - oldMouseY) + populationCanvas.getTranslateY());
+                    focusX = (getWidth() / 2 - environmentCanvas.getTranslateX()) / resolution;
+                    focusY = (getHeight() / 2 - environmentCanvas.getTranslateY()) / resolution;
 
                     event.consume();
                 }

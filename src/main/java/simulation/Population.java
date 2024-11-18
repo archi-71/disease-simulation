@@ -2,7 +2,6 @@ package simulation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class Population {
 
@@ -33,11 +32,21 @@ public class Population {
         individuals = new Individual[parameters.getPopulationSize()];
         for (int i = 0; i < individuals.length; i++) {
             Building home = homes.get((int) (Math.random() * homes.size()));
-            Building workplace = workplaces.get((int) (Math.random() * homes.size()));
-            individuals[i] = new Individual(home);
-            individuals[i].setHome(home);
-            individuals[i].setWorkplace(workplace);
+            Building work = workplaces.get((int) (Math.random() * homes.size()));
+            individuals[i] = new Individual(home, work);
         }
         return individuals;
+    }
+
+    public void step(int time, double deltaTime) {
+        for (Individual individual : individuals) {
+            individual.step(time, deltaTime);
+        }
+    }
+
+    public void reset() {
+        for (Individual individual : individuals) {
+            individual.reset();
+        }
     }
 }

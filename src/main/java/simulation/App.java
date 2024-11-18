@@ -15,13 +15,12 @@ public class App extends Application {
         stage.setMinHeight(minHeight);
 
         Simulation simulation = new Simulation();
-        Layout layout = new Layout(stage, simulation);
-        stage.setScene(layout.createScene());
+        Layout layout = new Layout(simulation, stage);
+        stage.setScene(layout.getScene());
         stage.show();
     }
 
     public static void main(String[] args) {
         launch();
     }
-
 }

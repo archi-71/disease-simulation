@@ -4,15 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
 
 public class Node {
 
-    private Geometry geometry;
+    protected Geometry geometry;
     private List<Node> neighbours;
-
-    public Geometry getGeometry() {
-        return geometry;
-    }
     
     public List<Node> getNeighbours() {
         return neighbours;
@@ -21,6 +18,14 @@ public class Node {
     public Node(Geometry geometry) {
         this.geometry = geometry;
         this.neighbours = new ArrayList<>();
+    }
+
+    public Point getCentre() {
+        return geometry.getCentroid();
+    }
+
+    public Point getPoint() {
+        return getCentre();
     }
 
     public void addNeighbour(Node neighbour) {

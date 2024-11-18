@@ -25,18 +25,29 @@ public class Layout {
     private double verticalSplit = 0.3;
     private double horizontalSplit = 0.6;
 
-    private Stage stage;
     private Simulation simulation;
+    private Stage stage;
+    private Scene scene;
 
     private ParamInputs inputParameters;
+    private SimulationControls controls;
     private Map map;
 
-    public Layout(Stage stg, Simulation sim) {
-        stage = stg;
-        simulation = sim;
+    public Layout(Simulation simulation, Stage stage) {
+        this.stage = stage;
+        this.simulation = simulation;
+        createScene();
+        simulation.setScheduleCallback(() -> {
+            controls.updateTime(simulation.getDay(), simulation.getTime());
+            map.drawPopulation(simulation.getPopulation());
+        });
     }
 
-    public Scene createScene() {
+    public Scene getScene() {
+        return scene;
+    }
+
+    private void createScene() {
         // Default window size to full screen dimensions
         Rectangle2D screen = Screen.getPrimary().getVisualBounds();
         double width = screen.getWidth();
@@ -55,7 +66,7 @@ public class Layout {
         Button initialiseSimButton = new Button("Initialise Simulation");
         initialiseSimButton.setOnAction(event -> {
             simulation.initialise(inputParameters.getParameters());
-            map.initialise(simulation.getEnvironment(), simulation.getPopulation());
+            map.initialise(simulation);
         });
         HBox initialiseSim = new HBox(initialiseSimButton);
         initialiseSim.setAlignment(Pos.CENTER);
@@ -63,11 +74,13 @@ public class Layout {
         parametersSection.getChildren().addAll(parametersTitle, parameters, initialiseSim);
 
         // Create controls section
-        HBox controlsSection = new HBox();
+        controls = new SimulationControls(simulation);
+
+        VBox controlsSection = new VBox();
         controlsSection.setMinHeight(controlsHeight);
 
         Label controlsTitle = new Label("Controls");
-        controlsSection.getChildren().addAll(controlsTitle);
+        controlsSection.getChildren().addAll(controlsTitle, controls);
 
         // Create map section
         map = new Map();
@@ -99,7 +112,7 @@ public class Layout {
         SplitPane layout = new SplitPane(parametersSection, rightSection);
         layout.setDividerPositions(verticalSplit);
 
-        Scene scene = new Scene(layout, width, height);
+        scene = new Scene(layout, width, height);
 
         // Update divider positions when changed by the user
         layout.getDividers().get(0).positionProperty().addListener((obs, oldPos, newPos) -> {
@@ -142,7 +155,5 @@ public class Layout {
                 isResizing = false;
             });
         });
-
-        return scene;
     }
 }

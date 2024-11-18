@@ -1,0 +1,86 @@
+private List<Node> findRoute(Node start, Node end) {
+        Set<Node> visited = new HashSet<>();
+        HashMap<Node, Node> cameFrom = new HashMap<>();
+        HashMap<Node, Double> gScore = new HashMap<>();
+        HashMap<Node, Double> fScore = new HashMap<>();
+        PriorityQueue<Node> frontier = new PriorityQueue<>(
+                Comparator.comparingDouble(node -> fScore.getOrDefault(node, Double.POSITIVE_INFINITY)));
+
+        gScore.put(start, 0.0);
+        fScore.put(start, distance(start, end));
+        frontier.add(start);
+
+        while (!frontier.isEmpty()) {
+            Node current = frontier.poll();
+
+            if (current.equals(end)) {
+                List<Node> route = new LinkedList<>();
+                route.add(current);
+                while (cameFrom.containsKey(current)) {
+                    current = cameFrom.get(current);
+                    route.add(0, current);
+                }
+                return route;
+            }
+
+            visited.add(current);
+
+            for (Node neighbour : current.getNeighbours()) {
+                if (visited.contains(neighbour))
+                    continue;
+
+                double g = gScore.getOrDefault(current, Double.POSITIVE_INFINITY)
+                        + distance(current, neighbour);
+
+                if (!frontier.contains(neighbour))
+                    frontier.add(neighbour);
+                else if (g >= gScore.getOrDefault(neighbour, Double.POSITIVE_INFINITY))
+                    continue;
+
+                double f = g + distance(neighbour, end);
+
+                cameFrom.put(neighbour, current);
+                gScore.put(neighbour, g);
+                fScore.put(neighbour, f);
+            }
+        }
+
+        return null;
+    }
+
+    private double distance(Node a, Node b) {
+        return a.getGeometry().getCentroid().distance(b.getGeometry().getCentroid());
+    }
+
+
+
+    if (route == null) {
+            Activity newActivity = schedule.getActivity(time);
+            switch (newActivity) {
+                case SLEEP:
+                    if (activity != Activity.SLEEP) {
+                        if (location == work)
+                            route = workToHome;
+                        else
+                            route = findRoute(location, home);
+                    }
+                    break;
+                case WORK:
+                    if (activity != Activity.WORK) {
+                        if (location == home)
+                            route = homeToWork;
+                        else
+                            route = findRoute(location, work);
+                    }
+                    break;
+                case LEISURE:
+                    List<Node> neighbours = location.getNeighbours();
+                    route = Arrays.asList(location, neighbours.get((int) (Math.random() *
+                            neighbours.size())));
+                    break;
+            }
+            routeIndex = 0;
+        }
+        if (route != null) {
+            followRoute(deltaTime);
+        }

@@ -3,8 +3,8 @@ package simulation;
 import java.io.File;
 
 public class EnvironmentParams {
-    private File buildingsFile = new File("maps/map/buildings-polygon.shp");
-    private File roadsFile = new File("maps/map/roads-line.shp");
+    private File buildingsFile = new File("../../../../maps/map/buildings-polygon.shp");
+    private File roadsFile = new File("../../../../maps/map/roads-line.shp");
 
     public void setBuildingsFile(File buildingsFile) {
         this.buildingsFile = buildingsFile;

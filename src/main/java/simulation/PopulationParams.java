@@ -1,7 +1,7 @@
 package simulation;
 
 public class PopulationParams {
-    private int populationSize = 100;
+    private int populationSize = 1;
 
     public void setPopulationSize(int populationSize) {
         this.populationSize = populationSize;
