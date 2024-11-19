@@ -1,6 +1,6 @@
 package simulation.ui;
 
-import java.awt.Color;
+import javafx.scene.paint.Color;
 import java.awt.Rectangle;
 
 import javafx.event.EventHandler;
@@ -70,12 +70,14 @@ public class Map extends Pane {
         double width = mapContent.getMaxBounds().getWidth();
         double height = mapContent.getMaxBounds().getHeight();
         GraphicsContext graphicsContext = populationCanvas.getGraphicsContext2D();
-        graphicsContext.setFill(javafx.scene.paint.Color.BLACK);
         graphicsContext.clearRect(0, 0, resolution, resolution);
         for (Individual individual : population.getIndividuals()) {
             double x = resolution / 2 + resolution * (individual.getPosition().getX() - centreX) / width;
             double y = resolution / 2 - resolution * (individual.getPosition().getY() - centreY) / height;
+            graphicsContext.setFill(Color.web(individual.getHealth().getColour()));
             graphicsContext.fillOval(x - individualSize / 2, y - individualSize / 2, individualSize, individualSize);
+            graphicsContext.setStroke(Color.BLACK);
+            graphicsContext.strokeOval(x - individualSize / 2, y - individualSize / 2, individualSize, individualSize);
         }
     }
 
@@ -94,7 +96,7 @@ public class Map extends Pane {
             mapContent.addLayer(layer);
         }
 
-        Style roadStyle = SLD.createLineStyle(Color.gray, 4);
+        Style roadStyle = SLD.createLineStyle(java.awt.Color.GRAY, 4);
         FeatureLayer roadLayer = new FeatureLayer(gisLoader.getRoadFeatures(), roadStyle);
         mapContent.addLayer(roadLayer);
 

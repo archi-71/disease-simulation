@@ -4,6 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import simulation.disease.Disease;
 import simulation.environment.Environment;
 import simulation.params.SimulationParams;
 import simulation.population.Population;
@@ -17,6 +18,7 @@ public class Simulation {
 
     private Environment environment;
     private Population population;
+    private Disease disease;
 
     private int day;
     private int time;
@@ -32,6 +34,10 @@ public class Simulation {
 
     public Population getPopulation() {
         return population;
+    }
+
+    public Disease getDisease() {
+        return disease;
     }
 
     public int getDay() {
@@ -61,6 +67,7 @@ public class Simulation {
         parameters = new SimulationParams(params);
         environment = new Environment(parameters.getEnvironmentParams());
         population = new Population(parameters.getPopulationParams(), environment);
+        disease = new Disease(parameters.getDiseaseParams(), population);
 
         day = 0;
         time = startTime;
@@ -86,7 +93,9 @@ public class Simulation {
             if (!isPaused) {
                 pause();
             }
+            environment.reset();
             population.reset();
+            disease.reset();
             day = 0;
             time = startTime;
             if (updateCallback != null) {
@@ -110,6 +119,7 @@ public class Simulation {
             day++;
         }
         population.step(time, deltaTime);
+        disease.step(time, deltaTime);
         if (updateCallback != null) {
             updateCallback.run();
         }

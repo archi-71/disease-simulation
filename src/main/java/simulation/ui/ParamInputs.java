@@ -17,13 +17,18 @@ public class ParamInputs extends VBox {
         parameters = new SimulationParams();
 
         Label environmentTitle = new Label("Environment");
-        environmentTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        environmentTitle.setStyle("-fx-font-size: 16px;");
         EnvironmentParamInputs environmentInputs = new EnvironmentParamInputs(parameters.getEnvironmentParams(), stage);
         getChildren().addAll(environmentTitle, environmentInputs);
 
         Label populationTitle = new Label("Population");
-        populationTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        populationTitle.setStyle("-fx-font-size: 16px;");
         PopulationParamInputs populationInputs = new PopulationParamInputs(parameters.getPopulationParams());
         getChildren().addAll(populationTitle, populationInputs);
+
+        Label diseaseTitle = new Label("Disease");
+        diseaseTitle.setStyle("-fx-font-size: 16px;");
+        DiseaseParamInputs diseaseInputs = new DiseaseParamInputs(parameters.getDiseaseParams());
+        getChildren().addAll(diseaseTitle, diseaseInputs);
     }
 }

@@ -5,13 +5,14 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import simulation.core.Simulation;
 
-public class SimulationControls extends HBox {
+public class Controls extends HBox {
 
     private Label timeDisplayLabel;
 
-    public SimulationControls(Simulation simulation) {
+    public Controls(Simulation simulation) {
 
         Button playPauseButton = new Button("Play");
         playPauseButton.setOnAction(event -> {
@@ -30,20 +31,23 @@ public class SimulationControls extends HBox {
             simulation.reset();
         });
 
-        HBox controls = new HBox();
+        HBox controls = new HBox(10);
         controls.getChildren().addAll(playPauseButton, resetButton);
 
         HBox timeDisplay = new HBox();
         timeDisplayLabel = new Label();
+        timeDisplay.setStyle("-fx-font-size: 20px; -fx-padding: 0 10 0 0;");
+        timeDisplay.setAlignment(Pos.CENTER_RIGHT);
         timeDisplay.getChildren().add(timeDisplayLabel);
 
-        setAlignment(Pos.CENTER);
+        HBox.setHgrow(timeDisplay, Priority.ALWAYS);
+
         getChildren().addAll(controls, timeDisplay);
     }
 
-    public void updateTime(int day, int milliseconds) {
+    public void updateTime(Simulation simulation) {
         Platform.runLater(() -> {
-            timeDisplayLabel.setText(formatTime(day, milliseconds));
+            timeDisplayLabel.setText(formatTime(simulation.getDay(), simulation.getTime()));
         });
     }
 
@@ -52,7 +56,12 @@ public class SimulationControls extends HBox {
         int seconds = milliseconds / 1000;
         int hours = seconds / 3600;
         int minutes = (seconds % 3600) / 60;
-        s += String.format("%02d:%02d", hours, minutes);
+        String period = hours >= 12 ? "pm" : "am";
+        hours = hours % 12;
+        if (hours == 0) {
+            hours = 12;
+        }
+        s += String.format("%02d:%02d %s", hours, minutes, period);
         return s;
     }
 }

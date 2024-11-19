@@ -31,15 +31,17 @@ public class Layout {
     private Scene scene;
 
     private ParamInputs inputParameters;
-    private SimulationControls controls;
+    private Controls controls;
     private Map map;
+    private Data data;
 
     public Layout(Simulation simulation, Stage stage) {
         this.stage = stage;
         this.simulation = simulation;
         createScene();
         simulation.setScheduleCallback(() -> {
-            controls.updateTime(simulation.getDay(), simulation.getTime());
+            controls.updateTime(simulation);
+            data.updateData(simulation.getDisease());
             map.drawPopulation(simulation.getPopulation());
         });
     }
@@ -59,6 +61,7 @@ public class Layout {
         parametersSection.setMinWidth(width * minSplit);
 
         Label parametersTitle = new Label("Parameters");
+        parametersTitle.setStyle("-fx-font-size: 16px;");
 
         inputParameters = new ParamInputs(stage);
         ScrollPane parameters = new ScrollPane(inputParameters);
@@ -75,12 +78,13 @@ public class Layout {
         parametersSection.getChildren().addAll(parametersTitle, parameters, initialiseSim);
 
         // Create controls section
-        controls = new SimulationControls(simulation);
+        controls = new Controls(simulation);
 
         VBox controlsSection = new VBox();
         controlsSection.setMinHeight(controlsHeight);
 
         Label controlsTitle = new Label("Controls");
+        controlsTitle.setStyle("-fx-font-size: 16px;");
         controlsSection.getChildren().addAll(controlsTitle, controls);
 
         // Create map section
@@ -91,17 +95,21 @@ public class Layout {
         map.prefHeightProperty().bind(mapSection.heightProperty());
 
         Label mapTitle = new Label("Map");
-        mapSection.getChildren().addAll(mapTitle);
+        mapTitle.setStyle("-fx-font-size: 16px;");
+        mapSection.getChildren().add(mapTitle);
 
-        // Create graph section
-        Pane graphSection = new Pane();
-        graphSection.setMinHeight(height * minSplit);
+        // Create data section
+        data = new Data();
 
-        Label graphTitle = new Label("Graph");
-        graphSection.getChildren().addAll(graphTitle);
+        VBox dataSection = new VBox();
+        dataSection.setMinHeight(height * minSplit);
 
-        // Combine map and graph sections into output section
-        SplitPane outputSection = new SplitPane(mapSection, graphSection);
+        Label dataTitle = new Label("Data");
+        dataTitle.setStyle("-fx-font-size: 16px;");
+        dataSection.getChildren().addAll(dataTitle, data);
+
+        // Combine map and data sections into output section
+        SplitPane outputSection = new SplitPane(mapSection, dataSection);
         outputSection.setOrientation(Orientation.VERTICAL);
         outputSection.setDividerPositions(horizontalSplit);
 
@@ -138,8 +146,8 @@ public class Layout {
         outputSection.heightProperty().addListener((obs, oldVal, newVal) -> {
             mapSection.setMinWidth(scene.getWidth() * minSplit);
             mapSection.setMinHeight(scene.getHeight() * minSplit);
-            graphSection.setMinWidth(scene.getWidth() * minSplit);
-            graphSection.setMinHeight(scene.getHeight() * minSplit);
+            dataSection.setMinWidth(scene.getWidth() * minSplit);
+            dataSection.setMinHeight(scene.getHeight() * minSplit);
             outputSection.setDividerPositions(horizontalSplit);
             map.resizeMap();
         });

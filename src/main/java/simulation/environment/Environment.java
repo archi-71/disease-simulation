@@ -47,6 +47,14 @@ public class Environment {
         buildGraph();
     }
 
+    public void reset() {
+        for (List<Building> buildingList : buildings.values()) {
+            for (Building building : buildingList) {
+                building.reset();
+            }
+        }
+    }
+
     private void buildGraph() {
         GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory(null);
         FeatureIterator<SimpleFeature> iterator = gisLoader.getRoadFeatures().features();

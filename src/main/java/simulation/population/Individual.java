@@ -13,6 +13,7 @@ import java.util.Set;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Point;
 
+import simulation.disease.Health;
 import simulation.environment.Building;
 import simulation.environment.Node;
 
@@ -26,6 +27,7 @@ public class Individual {
     private List<Node> homeToWork;
     private List<Node> workToHome;
 
+    private Health health;
     private Activity activity;
     private Point position;
     private Node location;
@@ -34,6 +36,14 @@ public class Individual {
 
     public Point getPosition() {
         return position;
+    }
+
+    public Health getHealth() {
+        return health;
+    }
+
+    public Health setHealth(Health health) {
+        return this.health = health;
     }
 
     public Individual(Building home, Building work) {
@@ -45,20 +55,27 @@ public class Individual {
             this.workToHome = new ArrayList<>(homeToWork);
             java.util.Collections.reverse(workToHome);
         }
+        reset();
+    }
 
-        activity = Activity.SLEEP;
-        position = home.getPoint();
-        location = home;
+    public HashSet<Individual> getContacts() {
+        if (location instanceof Building)
+            return ((Building) location).getOccupants();
+        return new HashSet<>();
     }
 
     public void reset() {
+        health = Health.SUSCEPTIBLE;
         activity = Activity.SLEEP;
-        position = location.getPoint();
+        position = home.getPoint();
         location = home;
+        home.addOccupant(this);
         route = null;
     }
 
     public void step(int time, double deltaTime) {
+        if (health == Health.DECEASED)
+            return;
         if (route == null) {
             Activity newActivity = schedule.getActivity(time);
             switch (newActivity) {
@@ -102,7 +119,13 @@ public class Individual {
             if (timeToNext < deltaTime) {
                 deltaTime -= timeToNext;
                 routeIndex++;
+                if (location instanceof Building) {
+                    ((Building) location).removeOccupant(this);
+                }
                 location = next;
+                if (location instanceof Building) {
+                    ((Building) location).addOccupant(this);
+                }
                 position = location.getPoint();
                 if (routeIndex == route.size() - 1) {
                     route = null;
