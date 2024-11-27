@@ -41,6 +41,11 @@ public class Map extends Pane {
     private Canvas populationCanvas;
     private MapContent mapContent;
 
+    private double width;
+    private double height;
+    private double centreX;
+    private double centreY;
+
     private double baseDragX;
     private double baseDragY;
     private double dragStartX;
@@ -65,10 +70,6 @@ public class Map extends Pane {
     }
 
     public void drawPopulation(Population population) {
-        double centreX = mapContent.getMaxBounds().getCenterX();
-        double centreY = mapContent.getMaxBounds().getCenterY();
-        double width = mapContent.getMaxBounds().getWidth();
-        double height = mapContent.getMaxBounds().getHeight();
         GraphicsContext graphicsContext = populationCanvas.getGraphicsContext2D();
         graphicsContext.clearRect(0, 0, resolution, resolution);
         for (Individual individual : population.getIndividuals()) {
@@ -99,6 +100,11 @@ public class Map extends Pane {
         Style roadStyle = SLD.createLineStyle(java.awt.Color.GRAY, 4);
         FeatureLayer roadLayer = new FeatureLayer(gisLoader.getRoadFeatures(), roadStyle);
         mapContent.addLayer(roadLayer);
+
+        width = mapContent.getMaxBounds().getWidth();
+        height = mapContent.getMaxBounds().getHeight();
+        centreX = mapContent.getMaxBounds().getCenterX();
+        centreY = mapContent.getMaxBounds().getCenterY();
 
         GraphicsContext graphicsContext = environmentCanvas.getGraphicsContext2D();
         Rectangle mapRect = mapContent.getViewport().getScreenArea();

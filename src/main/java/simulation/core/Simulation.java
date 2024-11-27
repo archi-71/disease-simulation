@@ -25,7 +25,7 @@ public class Simulation {
     private ScheduledExecutorService scheduler;
     private long lastUpdateTime;
     private boolean isPaused = true;
-    private double speed = 100;
+    private double speed = 1000;
     private Runnable updateCallback;
 
     public Environment getEnvironment() {
@@ -127,13 +127,13 @@ public class Simulation {
 
     private void startScheduler() {
         lastUpdateTime = System.currentTimeMillis();
-        scheduler.scheduleWithFixedDelay(() -> {
+        scheduler.scheduleAtFixedRate(() -> {
             if (!isPaused) {
                 long currentUpdateTime = System.currentTimeMillis();
                 step((currentUpdateTime - lastUpdateTime) * speed);
                 lastUpdateTime = currentUpdateTime;
             }
-        }, 0, 1, TimeUnit.MILLISECONDS);
+        }, 0, 100, TimeUnit.MILLISECONDS);
     }
 
     private void stopScheduler() {
