@@ -1,10 +1,10 @@
 package simulation.params;
 
 public class DiseaseParams {
-    private int initialInfected = 10;
-    private float transmissionRate = 0.1f;
-    private float recoveryRate = 0.01f;
-    private float mortalityRate = 0.01f;
+    private int initialInfected = 100;
+    private float transmissionRate = 0.2f;
+    private float recoveryRate = 0.005f;
+    private float mortalityRate = 0.001f;
 
     public void setInitialInfected(int initialInfected) {
         this.initialInfected = initialInfected;

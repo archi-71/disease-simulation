@@ -25,7 +25,7 @@ public class Schedule {
 
     private void createStandardSchedule() {
         events = new Event[2];
-        events[0] = new Event(Activity.SLEEP, hToMS(23), hToMS(7));
+        events[0] = new Event(Activity.SLEEP, hToMS(21), hToMS(7));
         events[1] = new Event(Activity.WORK, hToMS(9), hToMS(17));
     }
 

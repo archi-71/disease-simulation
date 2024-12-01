@@ -125,7 +125,7 @@ public class Map extends Pane {
 
         Stroke stroke = styleFactory.createStroke(
                 filterFactory.literal(outlineColour),
-                filterFactory.literal(2.0));
+                filterFactory.literal(2));
 
         PolygonSymbolizer polygonSymbolizer = styleFactory.createPolygonSymbolizer(stroke, fill, null);
 

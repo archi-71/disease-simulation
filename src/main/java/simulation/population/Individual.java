@@ -1,7 +1,6 @@
 package simulation.population;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,18 +14,19 @@ import org.locationtech.jts.geom.Point;
 
 import simulation.disease.Health;
 import simulation.environment.Building;
+import simulation.environment.Environment;
 import simulation.environment.Node;
 
 public class Individual {
 
     private final double speed = 0.000000001;
 
+    private Environment environment;
     private Schedule schedule;
     private Building home;
     private Building work;
     private List<Node> homeToWork;
     private List<Node> workToHome;
-
     private Health health;
     private Activity activity;
     private Point position;
@@ -46,15 +46,16 @@ public class Individual {
         return this.health = health;
     }
 
-    public Individual(Building home, Building work) {
-        schedule = new Schedule();
-        this.home = home;
-        this.work = work;
-        homeToWork = findRoute(home, work);
-        if (homeToWork != null) {
-            this.workToHome = new ArrayList<>(homeToWork);
-            java.util.Collections.reverse(workToHome);
+    public Individual(Environment environment) {
+        this.environment = environment;
+        home = environment.getHomes().get((int) (Math.random() * environment.getHomes().size()));
+        while (homeToWork == null) {
+            this.work = environment.getWorkplaces().get((int) (Math.random() * environment.getWorkplaces().size()));
+            homeToWork = findRoute(home, work);
         }
+        this.workToHome = new ArrayList<>(homeToWork);
+        java.util.Collections.reverse(workToHome);
+        schedule = new Schedule();
         reset();
     }
 
@@ -76,43 +77,67 @@ public class Individual {
     public void step(int time, double deltaTime) {
         if (health == Health.DECEASED)
             return;
-        if (route == null) {
-            Activity newActivity = schedule.getActivity(time);
-            switch (newActivity) {
-                case SLEEP:
-                    if (activity != Activity.SLEEP) {
-                        activity = Activity.SLEEP;
-                        if (location == work)
-                            route = workToHome;
-                        else
-                            route = findRoute(location, home);
-                    }
-                    break;
-                case WORK:
-                    if (activity != Activity.WORK) {
-                        activity = Activity.WORK;
-                        if (location == home)
-                            route = homeToWork;
-                        else
-                            route = findRoute(location, work);
-                    }
-                    break;
-                case LEISURE:
+        Activity newActivity = schedule.getActivity(time);
+        switch (newActivity) {
+            case SLEEP:
+                if (activity != Activity.SLEEP) {
+                    activity = Activity.SLEEP;
+                    goToHome();
+                }
+                break;
+            case WORK:
+                if (activity != Activity.WORK) {
+                    activity = Activity.WORK;
+                    if (location == home)
+                        goToWork();
+                }
+                break;
+            case LEISURE:
+                if (activity != Activity.LEISURE || route == null && Math.random() < 0.01) {
                     activity = Activity.LEISURE;
-                    List<Node> neighbours = location.getNeighbours();
-                    route = Arrays.asList(location, neighbours.get((int) (Math.random() *
-                            neighbours.size())));
+                    goToLeisure();
                     break;
-            }
-            routeIndex = 0;
+                }
         }
         if (route != null) {
             followRoute(deltaTime);
         }
     }
 
+    private void goToHome() {
+        if (location == work)
+            route = workToHome;
+        else
+            route = findRoute(location, home);
+        routeIndex = 0;
+    }
+
+    private void goToWork() {
+        if (location == home)
+            route = homeToWork;
+        else
+            route = findRoute(location, work);
+        routeIndex = 0;
+    }
+
+    private void goToLeisure() {
+        if (Math.random() < 0.5) {
+            Building amenity = environment.getAmenities()
+                    .get((int) (Math.random() * environment.getAmenities().size()));
+            route = findRoute(location, amenity);
+            route = findRoute(location, amenity);
+            routeIndex = 0;
+        } else {
+            goToHome();
+        }
+    }
+
     private void followRoute(double deltaTime) {
         do {
+            if (routeIndex == route.size() - 1) {
+                route = null;
+                return;
+            }
             Node next = route.get(routeIndex + 1);
             double distance = position.distance(next.getCentre());
             double timeToNext = distance / speed;
@@ -127,10 +152,6 @@ public class Individual {
                     ((Building) location).addOccupant(this);
                 }
                 position = location.getPoint();
-                if (routeIndex == route.size() - 1) {
-                    route = null;
-                    return;
-                }
             } else {
                 Coordinate current = position.getCoordinate();
                 Coordinate target = next.getCentre().getCoordinate();

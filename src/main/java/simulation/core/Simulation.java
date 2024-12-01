@@ -127,7 +127,7 @@ public class Simulation {
 
     private void startScheduler() {
         lastUpdateTime = System.currentTimeMillis();
-        scheduler.scheduleAtFixedRate(() -> {
+        scheduler.scheduleWithFixedDelay(() -> {
             if (!isPaused) {
                 long currentUpdateTime = System.currentTimeMillis();
                 step((currentUpdateTime - lastUpdateTime) * speed);

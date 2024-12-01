@@ -24,14 +24,46 @@ public class Environment {
 
     private EnvironmentParams parameters;
     private GISLoader gisLoader;
-    private HashMap<BuildingType, List<Building>> buildings;
+    private HashMap<BuildingType, List<Building>> buildingMap;
+
+    private List<Building> homes;
+    private List<Building> schools;
+    private List<Building> universities;
+    private List<Building> hospitals;
+    private List<Building> workplaces;
+    private List<Building> amenities;
+    private List<Building> nonEssential;
 
     public GISLoader getGISLoader() {
         return gisLoader;
     }
 
-    public List<Building> getBuildings(BuildingType type) {
-        return buildings.get(type);
+    public List<Building> getHomes() {
+        return homes;
+    }
+
+    public List<Building> getSchools() {
+        return schools;
+    }
+
+    public List<Building> getUniversities() {
+        return universities;
+    }
+
+    public List<Building> getHospitals() {
+        return hospitals;
+    }
+
+    public List<Building> getWorkplaces() {
+        return workplaces;
+    }
+
+    public List<Building> getAmenities() {
+        return amenities;
+    }
+
+    public List<Building> getNonEssential() {
+        return nonEssential;
     }
 
     public Environment(EnvironmentParams params) {
@@ -44,11 +76,36 @@ public class Environment {
         if (!gisLoader.loadRoads(parameters.getRoadsFile())) {
             return;
         }
+
         buildGraph();
+
+        // Pre-define useful lists of buildings
+        homes = buildingMap.get(BuildingType.RESIDENTIAL);
+        schools = buildingMap.get(BuildingType.SCHOOL);
+        universities = buildingMap.get(BuildingType.UNIVERSITY);
+        hospitals = buildingMap.get(BuildingType.HOSPITAL);
+
+        workplaces = new ArrayList<Building>();
+        workplaces.addAll(buildingMap.get(BuildingType.SCHOOL));
+        workplaces.addAll(buildingMap.get(BuildingType.UNIVERSITY));
+        workplaces.addAll(buildingMap.get(BuildingType.HOSPITAL));
+        workplaces.addAll(buildingMap.get(BuildingType.ESSENTIAL_AMENITY));
+        workplaces.addAll(buildingMap.get(BuildingType.ESSENTIAL_WORKPLACE));
+        workplaces.addAll(buildingMap.get(BuildingType.NON_ESSENTIAL_AMENITY));
+        workplaces.addAll(buildingMap.get(BuildingType.NON_ESSENTIAL_WORKPLACE));
+
+        amenities = new ArrayList<Building>();
+        amenities.addAll(buildingMap.get(BuildingType.ESSENTIAL_AMENITY));
+        amenities.addAll(buildingMap.get(BuildingType.NON_ESSENTIAL_AMENITY));
+
+        nonEssential = new ArrayList<Building>();
+        nonEssential.addAll(buildingMap.get(BuildingType.NON_ESSENTIAL_AMENITY));
+        nonEssential.addAll(buildingMap.get(BuildingType.NON_ESSENTIAL_WORKPLACE));
+
     }
 
     public void reset() {
-        for (List<Building> buildingList : buildings.values()) {
+        for (List<Building> buildingList : buildingMap.values()) {
             for (Building building : buildingList) {
                 building.reset();
             }
@@ -84,7 +141,7 @@ public class Environment {
         }
         iterator.close();
 
-        buildings = new HashMap<>();
+        buildingMap = new HashMap<>();
         for (BuildingType type : BuildingType.values()) {
             ArrayList<Building> buildingList = new ArrayList<>();
             iterator = gisLoader.getBuildingFeatures(type).features();
@@ -109,7 +166,7 @@ public class Environment {
                 buildingList.add(building);
             }
             iterator.close();
-            buildings.put(type, buildingList);
+            buildingMap.put(type, buildingList);
         }
     }
 }
