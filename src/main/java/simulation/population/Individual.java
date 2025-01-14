@@ -22,17 +22,26 @@ public class Individual {
     private final double speed = 0.000000001;
 
     private Environment environment;
-    private Schedule schedule;
+
+    // Individual characteristics
+    private int age;
     private Building home;
-    private Building work;
-    private List<Node> homeToWork;
-    private List<Node> workToHome;
+    private Building workplace;
+    private Schedule schedule;
+    private List<Node> homeToWorkplace;
+    private List<Node> workplaceToHome;
+
+    // Individual current state
     private Health health;
     private Activity activity;
     private Point position;
     private Node location;
     private List<Node> route;
     private int routeIndex;
+
+    public int getAge() {
+        return age;
+    }
 
     public Point getPosition() {
         return position;
@@ -46,16 +55,18 @@ public class Individual {
         return this.health = health;
     }
 
-    public Individual(Environment environment) {
+    public Individual(Environment environment, int age, Building home, Building workplace) {
         this.environment = environment;
-        home = environment.getHomes().get((int) (Math.random() * environment.getHomes().size()));
-        while (homeToWork == null) {
-            this.work = environment.getWorkplaces().get((int) (Math.random() * environment.getWorkplaces().size()));
-            homeToWork = findRoute(home, work);
+        this.age = age;
+        this.home = home;
+        this.workplace = workplace;
+        boolean isWorking = workplace != null;
+        schedule = new Schedule(age, isWorking);
+        if (isWorking) {
+            homeToWorkplace = findRoute(home, workplace);
+            workplaceToHome = new ArrayList<>(homeToWorkplace);
+            java.util.Collections.reverse(workplaceToHome);
         }
-        this.workToHome = new ArrayList<>(homeToWork);
-        java.util.Collections.reverse(workToHome);
-        schedule = new Schedule();
         reset();
     }
 
@@ -69,6 +80,9 @@ public class Individual {
         health = Health.SUSCEPTIBLE;
         activity = Activity.SLEEP;
         position = home.getPoint();
+        if (location instanceof Building) {
+            ((Building) location).removeOccupant(this);
+        }
         location = home;
         home.addOccupant(this);
         route = null;
@@ -88,8 +102,7 @@ public class Individual {
             case WORK:
                 if (activity != Activity.WORK) {
                     activity = Activity.WORK;
-                    if (location == home)
-                        goToWork();
+                    goToWork();
                 }
                 break;
             case LEISURE:
@@ -105,8 +118,8 @@ public class Individual {
     }
 
     private void goToHome() {
-        if (location == work)
-            route = workToHome;
+        if (location == workplace)
+            route = workplaceToHome;
         else
             route = findRoute(location, home);
         routeIndex = 0;
@@ -114,22 +127,22 @@ public class Individual {
 
     private void goToWork() {
         if (location == home)
-            route = homeToWork;
+            route = homeToWorkplace;
         else
-            route = findRoute(location, work);
+            route = findRoute(location, workplace);
         routeIndex = 0;
     }
 
     private void goToLeisure() {
         if (Math.random() < 0.5) {
-            Building amenity = environment.getAmenities()
-                    .get((int) (Math.random() * environment.getAmenities().size()));
-            route = findRoute(location, amenity);
-            route = findRoute(location, amenity);
-            routeIndex = 0;
-        } else {
-            goToHome();
+            Building amenity = environment.getRandomAmenity(location.getComponentID());
+            if (amenity != null) {
+                route = findRoute(location, amenity);
+                routeIndex = 0;
+                return;
+            }
         }
+        goToHome();
     }
 
     private void followRoute(double deltaTime) {

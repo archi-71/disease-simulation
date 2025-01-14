@@ -1,11 +1,33 @@
 package simulation.population;
 
+import java.util.ArrayList;
+
 public class Schedule {
 
-    private Event[] events;
+    private final double range = 2;
 
-    public Schedule() {
-        createStandardSchedule();
+    private ArrayList<Event> events;
+
+    public Schedule(int age, boolean isWorking) {
+        events = new ArrayList<>();
+
+        if (age < 5) {
+            events.add(new Event(Activity.SLEEP, getTime(19), getTime(7)));
+        } else if (age < 13) {
+            events.add(new Event(Activity.SLEEP, getTime(21), getTime(7)));
+        } else if (age < 18) {
+            events.add(new Event(Activity.SLEEP, getTime(22), getTime(8)));
+        } else if (age < 25) {
+            events.add(new Event(Activity.SLEEP, getTime(24), getTime(8)));
+        } else if (age < 65) {
+            events.add(new Event(Activity.SLEEP, getTime(23), getTime(7)));
+        } else {
+            events.add(new Event(Activity.SLEEP, getTime(22), getTime(6)));
+        }
+
+        if (isWorking) {
+            events.add(new Event(Activity.WORK, getTime(9), getTime(17)));
+        }
     }
 
     public Activity getActivity(int time) {
@@ -23,13 +45,7 @@ public class Schedule {
         return Activity.LEISURE;
     }
 
-    private void createStandardSchedule() {
-        events = new Event[2];
-        events[0] = new Event(Activity.SLEEP, hToMS(21), hToMS(7));
-        events[1] = new Event(Activity.WORK, hToMS(9), hToMS(17));
-    }
-
-    private int hToMS(int hours) {
-        return hours * 60 * 60 * 1000;
+    private int getTime(int hours) {
+        return (int) ((hours + Math.random() * range - range / 2) * 60f * 60f * 1000f);
     }
 }

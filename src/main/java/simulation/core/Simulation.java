@@ -28,6 +28,10 @@ public class Simulation {
     private double speed = 1000;
     private Runnable updateCallback;
 
+    public SimulationParams getParameters() {
+        return parameters;
+    }
+
     public Environment getEnvironment() {
         return environment;
     }
@@ -93,7 +97,6 @@ public class Simulation {
             if (!isPaused) {
                 pause();
             }
-            environment.reset();
             population.reset();
             disease.reset();
             day = 0;

@@ -70,6 +70,8 @@ public class Layout {
         Button initialiseSimButton = new Button("Initialise Simulation");
         initialiseSimButton.setOnAction(event -> {
             simulation.initialise(inputParameters.getParameters());
+            inputParameters.getPopulationInputs()
+                    .updatePopulationSize(simulation.getParameters().getPopulationParams().getPopulationSize());
             map.initialise(simulation);
         });
         HBox initialiseSim = new HBox(initialiseSimButton);

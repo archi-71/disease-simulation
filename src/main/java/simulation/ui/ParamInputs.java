@@ -1,6 +1,6 @@
 package simulation.ui;
 
-import javafx.scene.control.Label;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import simulation.params.SimulationParams;
@@ -8,27 +8,42 @@ import simulation.params.SimulationParams;
 public class ParamInputs extends VBox {
 
     private SimulationParams parameters;
+    private EnvironmentParamInputs environmentInputs;
+    private PopulationParamInputs populationInputs;
+    private DiseaseParamInputs diseaseInputs;
+
+    public ParamInputs(Stage stage) {
+        parameters = new SimulationParams();
+
+        this.environmentInputs = new EnvironmentParamInputs(parameters.getEnvironmentParams(), stage);
+        environmentInputs.setPadding(new javafx.geometry.Insets(10));
+        TitledPane environmentPane = new TitledPane("Environment", environmentInputs);
+        getChildren().add(environmentPane);
+
+        this.populationInputs = new PopulationParamInputs(parameters.getPopulationParams());
+        populationInputs.setPadding(new javafx.geometry.Insets(10));
+        TitledPane populationPane = new TitledPane("Population", populationInputs);
+        getChildren().addAll(populationPane);
+
+        this.diseaseInputs = new DiseaseParamInputs(parameters.getDiseaseParams());
+        diseaseInputs.setPadding(new javafx.geometry.Insets(10));
+        TitledPane diseasePane = new TitledPane("Disease", diseaseInputs);
+        getChildren().add(diseasePane);
+    }
 
     public SimulationParams getParameters() {
         return parameters;
     }
 
-    public ParamInputs(Stage stage) {
-        parameters = new SimulationParams();
+    public EnvironmentParamInputs getEnvironmentInputs() {
+        return environmentInputs;
+    }
 
-        Label environmentTitle = new Label("Environment");
-        environmentTitle.setStyle("-fx-font-size: 16px;");
-        EnvironmentParamInputs environmentInputs = new EnvironmentParamInputs(parameters.getEnvironmentParams(), stage);
-        getChildren().addAll(environmentTitle, environmentInputs);
+    public PopulationParamInputs getPopulationInputs() {
+        return populationInputs;
+    }
 
-        Label populationTitle = new Label("Population");
-        populationTitle.setStyle("-fx-font-size: 16px;");
-        PopulationParamInputs populationInputs = new PopulationParamInputs(parameters.getPopulationParams());
-        getChildren().addAll(populationTitle, populationInputs);
-
-        Label diseaseTitle = new Label("Disease");
-        diseaseTitle.setStyle("-fx-font-size: 16px;");
-        DiseaseParamInputs diseaseInputs = new DiseaseParamInputs(parameters.getDiseaseParams());
-        getChildren().addAll(diseaseTitle, diseaseInputs);
+    public DiseaseParamInputs getDiseaseInputs() {
+        return diseaseInputs;
     }
 }
