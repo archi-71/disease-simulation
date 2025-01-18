@@ -30,7 +30,7 @@ public class Layout {
     private Stage stage;
     private Scene scene;
 
-    private ParamInputs inputParameters;
+    private ParameterInputs inputParameters;
     private Controls controls;
     private Map map;
     private Data data;
@@ -63,15 +63,13 @@ public class Layout {
         Label parametersTitle = new Label("Parameters");
         parametersTitle.setStyle("-fx-font-size: 16px;");
 
-        inputParameters = new ParamInputs(stage);
+        inputParameters = new ParameterInputs(stage);
         ScrollPane parameters = new ScrollPane(inputParameters);
         VBox.setVgrow(parameters, Priority.ALWAYS);
 
         Button initialiseSimButton = new Button("Initialise Simulation");
         initialiseSimButton.setOnAction(event -> {
             simulation.initialise(inputParameters.getParameters());
-            inputParameters.getPopulationInputs()
-                    .updatePopulationSize(simulation.getParameters().getPopulationParams().getPopulationSize());
             map.initialise(simulation);
         });
         HBox initialiseSim = new HBox(initialiseSimButton);

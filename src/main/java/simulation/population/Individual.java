@@ -13,8 +13,10 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Point;
 
 import simulation.disease.Health;
+import simulation.disease.HealthState;
 import simulation.environment.Building;
 import simulation.environment.Environment;
+import simulation.environment.Hospital;
 import simulation.environment.Node;
 
 public class Individual {
@@ -32,28 +34,13 @@ public class Individual {
     private List<Node> workplaceToHome;
 
     // Individual current state
-    private Health health;
     private Activity activity;
     private Point position;
     private Node location;
     private List<Node> route;
     private int routeIndex;
-
-    public int getAge() {
-        return age;
-    }
-
-    public Point getPosition() {
-        return position;
-    }
-
-    public Health getHealth() {
-        return health;
-    }
-
-    public Health setHealth(Health health) {
-        return this.health = health;
-    }
+    private Health health;
+    private Hospital hospital;
 
     public Individual(Environment environment, int age, Building home, Building workplace) {
         this.environment = environment;
@@ -70,6 +57,26 @@ public class Individual {
         reset();
     }
 
+    public int getAge() {
+        return age;
+    }
+
+    public Activity getActivity() {
+        return activity;
+    }
+
+    public Point getPosition() {
+        return position;
+    }
+
+    public Health getHealth() {
+        return health;
+    }
+
+    public void setHealth(Health health) {
+        this.health = health;
+    }
+
     public HashSet<Individual> getContacts() {
         if (location instanceof Building)
             return ((Building) location).getOccupants();
@@ -77,7 +84,6 @@ public class Individual {
     }
 
     public void reset() {
-        health = Health.SUSCEPTIBLE;
         activity = Activity.SLEEP;
         position = home.getPoint();
         if (location instanceof Building) {
@@ -86,11 +92,32 @@ public class Individual {
         location = home;
         home.addOccupant(this);
         route = null;
+        hospital = null;
     }
 
     public void step(int time, double deltaTime) {
-        if (health == Health.DECEASED)
+        if (health.getState() == HealthState.DECEASED)
             return;
+        if (health.getState() == HealthState.SYMPTOMATIC_SEVERE) {
+            if (activity != Activity.HOPSITALISATION) {
+                // Go to hospital if possible, otherwise isolate at home
+                if (goToHospital()) {
+                    activity = Activity.HOPSITALISATION;
+                } else if (activity != Activity.ISOLATION) {
+                    activity = Activity.ISOLATION;
+                    goToHome();
+                }
+            }
+        } else {
+            if (activity == Activity.HOPSITALISATION) {
+                hospital.dischargePatient();
+            }
+            followSchedule(time);
+        }
+        move(deltaTime);
+    }
+
+    private void followSchedule(int time) {
         Activity newActivity = schedule.getActivity(time);
         switch (newActivity) {
             case SLEEP:
@@ -109,11 +136,9 @@ public class Individual {
                 if (activity != Activity.LEISURE || route == null && Math.random() < 0.01) {
                     activity = Activity.LEISURE;
                     goToLeisure();
-                    break;
                 }
-        }
-        if (route != null) {
-            followRoute(deltaTime);
+                break;
+            default:
         }
     }
 
@@ -145,7 +170,21 @@ public class Individual {
         goToHome();
     }
 
-    private void followRoute(double deltaTime) {
+    private boolean goToHospital() {
+        Hospital hospital = environment.getRandomHospital(location.getComponentID());
+        if (hospital != null && !hospital.isFull()) {
+            this.hospital = hospital;
+            hospital.admitPatient();
+            route = findRoute(location, hospital);
+            routeIndex = 0;
+            return true;
+        }
+        return false;
+    }
+
+    private void move(double deltaTime) {
+        if (route == null)
+            return;
         do {
             if (routeIndex == route.size() - 1) {
                 route = null;

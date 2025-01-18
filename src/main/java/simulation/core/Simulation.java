@@ -60,10 +60,6 @@ public class Simulation {
         return isPaused;
     }
 
-    public Simulation() {
-        parameters = new SimulationParams();
-    }
-
     public void initialise(SimulationParams params) {
         if (!isPaused) {
             pause();

@@ -1,6 +1,6 @@
 package simulation.disease;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 
 import simulation.params.DiseaseParams;
 import simulation.population.Individual;
@@ -9,10 +9,15 @@ import simulation.population.Population;
 public class Disease {
 
     private DiseaseParams parameters;
-    private Individual[] individuals;
+    private ArrayList<Individual> individuals;
 
+    // Number of individuals in each state for data collection
     private int susceptibleNum;
+    private int exposedNum;
     private int infectiousNum;
+    private int asymptomaticNum;
+    private int symptomaticMildNum;
+    private int symptomaticSevereNum;
     private int recoveredNum;
     private int deceasedNum;
 
@@ -20,8 +25,24 @@ public class Disease {
         return susceptibleNum;
     }
 
+    public int getExposedNum() {
+        return exposedNum;
+    }
+
     public int getInfectiousNum() {
         return infectiousNum;
+    }
+
+    public int getAsymptomaticNum() {
+        return asymptomaticNum;
+    }
+
+    public int getSymptomaticMildNum() {
+        return symptomaticMildNum;
+    }
+
+    public int getSymptomaticSevereNum() {
+        return symptomaticSevereNum;
     }
 
     public int getRecoveredNum() {
@@ -35,43 +56,74 @@ public class Disease {
     public Disease(DiseaseParams params, Population population) {
         parameters = params;
         individuals = population.getIndividuals();
+        for (Individual individual : individuals) {
+            Health health = new Health(params, individual);
+            individual.setHealth(health);
+        }
         reset();
     }
 
     public void reset() {
-        infectiousNum = Math.min(individuals.length, parameters.getInitialInfected());
-        for (int i = 0; i < infectiousNum; i++) {
-            individuals[i].setHealth(Health.INFECTIOUS);
+        exposedNum = Math.min(individuals.size(), parameters.getInitialInfected().getValue());
+        for (int i = 0; i < individuals.size(); i++) {
+            Health health = individuals.get(i).getHealth();
+            health.reset();
+            if (i < exposedNum) {
+                health.transition(HealthState.EXPOSED);
+            }
         }
-        susceptibleNum = individuals.length - infectiousNum;
+        susceptibleNum = individuals.size() - exposedNum;
+        infectiousNum = 0;
+        asymptomaticNum = 0;
+        symptomaticMildNum = 0;
+        symptomaticSevereNum = 0;
         recoveredNum = 0;
         deceasedNum = 0;
     }
 
     public void step(int time, double deltaTime) {
+        double deltaTimeDays = deltaTime / 86400000;
         for (Individual individual : individuals) {
-            if (individual.getHealth() == Health.INFECTIOUS) {
-                if (Math.random() < parameters.getRecoveryRate()) {
-                    individual.setHealth(Health.RECOVERED);
-                    infectiousNum--;
-                    recoveredNum++;
-                    return;
-                }
-                if (Math.random() < parameters.getMortalityRate()) {
-                    individual.setHealth(Health.DECEASED);
-                    infectiousNum--;
-                    deceasedNum++;
-                    return;
-                }
-                HashSet<Individual> contacts = individual.getContacts();
-                for (Individual contact : contacts) {
-                    if (contact.getHealth() == Health.SUSCEPTIBLE) {
-                        if (Math.random() < parameters.getTransmissionRate()) {
-                            contact.setHealth(Health.INFECTIOUS);
-                            susceptibleNum--;
-                            infectiousNum++;
+            HealthState oldState = individual.getHealth().getState();
+            individual.getHealth().update(deltaTimeDays);
+            HealthState newState = individual.getHealth().getState();
+            if (oldState != newState) {
+                switch (newState) {
+                    case EXPOSED:
+                        susceptibleNum--;
+                        exposedNum++;
+                        break;
+                    case INFECTIOUS:
+                        exposedNum--;
+                        infectiousNum++;
+                        break;
+                    case ASYMPTOMATIC:
+                        infectiousNum--;
+                        asymptomaticNum++;
+                        break;
+                    case SYMPTOMATIC_MILD:
+                        infectiousNum--;
+                        symptomaticMildNum++;
+                        break;
+                    case SYMPTOMATIC_SEVERE:
+                        symptomaticMildNum--;
+                        symptomaticSevereNum++;
+                        break;
+                    case RECOVERED:
+                        if (oldState == HealthState.ASYMPTOMATIC) {
+                            asymptomaticNum--;
+                        } else if (oldState == HealthState.SYMPTOMATIC_MILD) {
+                            symptomaticMildNum--;
+                        } else if (oldState == HealthState.SYMPTOMATIC_SEVERE) {
+                            symptomaticSevereNum--;
                         }
-                    }
+                        recoveredNum++;
+                        break;
+                    case DECEASED:
+                        symptomaticSevereNum--;
+                        deceasedNum++;
+                        break;
+                    default:
                 }
             }
         }

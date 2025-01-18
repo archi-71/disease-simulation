@@ -124,8 +124,6 @@ public class FeatureFilters {
         List<Filter> filters = new ArrayList<>();
         filters.add(F.equals(F.property("building"), F.literal("hospital")));
         filters.add(F.equals(F.property("amenity"), F.literal("hospital")));
-        filters.add(F.equals(F.property("amenity"), F.literal("clinic")));
-
         return F.and(isBuilding(), F.or(filters));
     }
 
@@ -143,6 +141,7 @@ public class FeatureFilters {
         filters.add(F.equals(F.property("amenity"), F.literal("bureau_de_change")));
         filters.add(F.equals(F.property("amenity"), F.literal("money_transfer")));
         filters.add(F.equals(F.property("amenity"), F.literal("payment_centre")));
+        filters.add(F.equals(F.property("amenity"), F.literal("clinic")));
         filters.add(F.equals(F.property("amenity"), F.literal("dentist")));
         filters.add(F.equals(F.property("amenity"), F.literal("doctors")));
         filters.add(F.equals(F.property("amenity"), F.literal("nursing_home")));

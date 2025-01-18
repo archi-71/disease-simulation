@@ -31,7 +31,7 @@ public class Environment {
     private HashMap<Integer, List<Building>> homeMap;
     private HashMap<Integer, List<Building>> schoolMap;
     private HashMap<Integer, List<Building>> universityMap;
-    private HashMap<Integer, List<Building>> hospitalMap;
+    private HashMap<Integer, List<Hospital>> hospitalMap;
     private HashMap<Integer, List<Building>> workplaceMap;
     private HashMap<Integer, List<Building>> amenityMap;
     private HashMap<Integer, List<Building>> nonEssentialMap;
@@ -72,8 +72,8 @@ public class Environment {
         return universities.get((int) (Math.random() * universities.size()));
     }
 
-    public Building getRandomHospital(int componentID) {
-        List<Building> hospitals = hospitalMap.get(componentID);
+    public Hospital getRandomHospital(int componentID) {
+        List<Hospital> hospitals = hospitalMap.get(componentID);
         if (hospitals == null) {
             return null;
         }
@@ -106,16 +106,32 @@ public class Environment {
 
     public Environment(EnvironmentParams params) {
         parameters = params;
+
+        // Load GIS data
         gisLoader = new GISLoader();
-
-        if (!gisLoader.loadBuildings(parameters.getBuildingsFile())) {
+        if (!gisLoader.loadBuildings(parameters.getBuildingsFile().getFile())) {
             return;
         }
-        if (!gisLoader.loadRoads(parameters.getRoadsFile())) {
+        if (!gisLoader.loadRoads(parameters.getRoadsFile().getFile())) {
             return;
         }
 
+        // Create graph of buildings connected by the road network
         buildGraph();
+
+        // Assign hospital capacities, weighted by their area
+        double totalArea = 0;
+        for (List<Hospital> hospitals : hospitalMap.values()) {
+            for (Hospital hospital : hospitals) {
+                totalArea += hospital.getArea();
+            }
+        }
+        for (List<Hospital> hospitals : hospitalMap.values()) {
+            for (Hospital hospital : hospitals) {
+                int capacity = (int) (hospital.getArea() / totalArea * parameters.getHospitalCapacity().getValue());
+                hospital.setCapacity(capacity);
+            }
+        }
     }
 
     private void buildGraph() {
@@ -196,7 +212,12 @@ public class Environment {
                 });
                 String key = nearestRoad.getX() + "," + nearestRoad.getY();
                 Node roadNode = roadNodes.get(key);
-                Building building = new Building(polygon, feature.getAttribute("osm_id").toString(), type);
+                Building building;
+                if (type == BuildingType.HOSPITAL) {
+                    building = new Hospital(polygon, feature.getAttribute("osm_id").toString());
+                } else {
+                    building = new Building(polygon, feature.getAttribute("osm_id").toString(), type);
+                }
                 building.addNeighbour(roadNode);
                 roadNode.addNeighbour(building);
                 int componentID = roadNode.getComponentID();
@@ -215,7 +236,7 @@ public class Environment {
                         workplaceMap.computeIfAbsent(componentID, k -> new ArrayList<>()).add(building);
                         break;
                     case HOSPITAL:
-                        hospitalMap.computeIfAbsent(componentID, k -> new ArrayList<>()).add(building);
+                        hospitalMap.computeIfAbsent(componentID, k -> new ArrayList<>()).add((Hospital) building);
                         workplaceMap.computeIfAbsent(componentID, k -> new ArrayList<>()).add(building);
                         break;
                     case ESSENTIAL_AMENITY:

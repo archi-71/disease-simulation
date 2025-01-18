@@ -10,63 +10,57 @@ import simulation.params.PopulationParams;
 public class Population {
 
     private PopulationParams parameters;
-    private Individual[] individuals;
+    private ArrayList<Individual> individuals;
 
     public Population(PopulationParams params, Environment environment) {
         parameters = params;
-        individuals = populateEnvironment(environment);
+        populateEnvironment(environment);
     }
 
-    public Individual[] getIndividuals() {
+    public ArrayList<Individual> getIndividuals() {
         return individuals;
     }
 
-    private Individual[] populateEnvironment(Environment environment) {
+    private void populateEnvironment(Environment environment) {
         List<Building> homes = environment.getAllHomes();
         java.util.Collections.shuffle(homes);
 
         // Generate household sizes
         ArrayList<Integer> households = new ArrayList<>();
         int population = 0;
-        while (population < parameters.getPopulationSize() && households.size() < homes.size()) {
-            int householdSize = parameters.getHouseholdSizeDistribution().randomSample();
-            if (population + householdSize > parameters.getPopulationSize()) {
-                householdSize = parameters.getPopulationSize() - population;
+        while (population < parameters.getPopulationSize().getValue() && households.size() < homes.size()) {
+            int householdSize = parameters.getHouseholdSizeDistribution().sample();
+            if (population + householdSize > parameters.getPopulationSize().getValue()) {
+                householdSize = parameters.getPopulationSize().getValue() - population;
             }
             households.add(householdSize);
             population += householdSize;
         }
 
-        // Override population size if there is limited housing
-        if (households.size() == homes.size()) {
-            parameters.setPopulationSize(population);
-        }
-
         // Populate households
-        individuals = new Individual[parameters.getPopulationSize()];
-        int index = 0;
+        individuals = new ArrayList<>();
         for (int h = 0; h < households.size(); h++) {
             Building home = homes.get(h);
             int componentID = home.getComponentID();
             for (int i = 0; i < households.get(h); i++) {
-                AgeGroup ageGroup = parameters.getAgeDistribution().randomSample();
+                AgeGroup ageGroup = parameters.getAgeDistribution().sample();
                 int age = (int) (Math.random() * (ageGroup.getMaxAge() - ageGroup.getMinAge() + 1))
                         + ageGroup.getMinAge();
                 Building workplace;
-                if (age < 5 || age > 65 || (age >= 18 && Math.random() < parameters.getUnemploymentRate())) {
+                if (age < 5 || age > 65 || (age >= 18 && Math.random() < parameters.getUnemploymentRate().getValue())) {
                     workplace = null;
                 } else if (age < 18) {
                     workplace = environment.getRandomSchool(componentID);
-                } else if (age < 25 && Math.random() < parameters.getUniversityEntryRate()) {
+                } else if (age < 25 && Math.random() < parameters.getUniversityEntryRate().getValue()) {
                     workplace = environment.getRandomUniversity(componentID);
                 } else {
                     workplace = environment.getRandomWorkplace(componentID);
                 }
-                individuals[index] = new Individual(environment, age, home, workplace);
-                index++;
+                individuals.add(new Individual(environment, age, home, workplace));
             }
         }
-        return individuals;
+
+        java.util.Collections.shuffle(individuals);
     }
 
     public void step(int time, double deltaTime) {

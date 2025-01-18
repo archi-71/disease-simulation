@@ -1,6 +1,10 @@
 package simulation.params;
 
-public class SimulationParams {
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+public class SimulationParams implements IParam {
 
     private EnvironmentParams environmentParams;
     private PopulationParams populationParams;
@@ -18,8 +22,8 @@ public class SimulationParams {
         return diseaseParams;
     }
 
-    public SimulationParams() {
-        environmentParams = new EnvironmentParams();
+    public SimulationParams(Stage stage) {
+        environmentParams = new EnvironmentParams(stage);
         populationParams = new PopulationParams();
         diseaseParams = new DiseaseParams();
     };
@@ -28,5 +32,13 @@ public class SimulationParams {
         environmentParams = params.environmentParams;
         populationParams = params.populationParams;
         diseaseParams = params.diseaseParams;
+    }
+
+    public Region getInputUI() {
+        VBox container = new VBox(
+                environmentParams.getInputUI(),
+                populationParams.getInputUI(),
+                diseaseParams.getInputUI());
+        return container;
     }
 }

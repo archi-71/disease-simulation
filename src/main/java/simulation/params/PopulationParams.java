@@ -1,87 +1,60 @@
 package simulation.params;
 
-import simulation.population.Distribution;
+import javafx.scene.control.TitledPane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import simulation.population.AgeGroup;
 
-public class PopulationParams {
-    private int populationSize = 500;
-    private Distribution<Integer> householdSizeDistribution = new Distribution<Integer>() {
+public class PopulationParams implements IParam {
+    private IntegerParam populationSize = new IntegerParam("Population Size", 500);
+    private DiscreteDistributionParam<Integer> householdSizeDistribution = new DiscreteDistributionParam<Integer>(
+            "Household Size Distribution") {
         {
-            set(1, 0.2f);
-            set(2, 0.3f);
-            set(3, 0.25f);
-            set(4, 0.15f);
-            set(5, 0.055f);
-            set(6, 0.025f);
-            set(7, 0.015f);
-            set(8, 0.005f);
+            setValue(1, new FloatParam("1 person", 0.2f));
+            setValue(2, new FloatParam("2 people", 0.3f));
+            setValue(3, new FloatParam("3 people", 0.25f));
+            setValue(4, new FloatParam("4 people", 0.15f));
+            setValue(5, new FloatParam("5 people", 0.055f));
+            setValue(6, new FloatParam("6 people", 0.025f));
+            setValue(7, new FloatParam("7 people", 0.015f));
+            setValue(8, new FloatParam("8 people", 0.005f));
         }
     };
-    private Distribution<AgeGroup> ageDistribution = new Distribution<AgeGroup>() {
+    private DiscreteDistributionParam<AgeGroup> ageDistribution = new DiscreteDistributionParam<AgeGroup>(
+            "Age Distribution") {
         {
-            set(AgeGroup._0_TO_4, 5.9f);
-            set(AgeGroup._5_TO_9, 5.8f);
-            set(AgeGroup._10_TO_14, 5.6f);
-            set(AgeGroup._15_TO_19, 5.4f);
-            set(AgeGroup._20_TO_24, 6.2f);
-            set(AgeGroup._25_TO_29, 6.6f);
-            set(AgeGroup._30_TO_34, 6.5f);
-            set(AgeGroup._35_TO_39, 6.1f);
-            set(AgeGroup._40_TO_44, 5.8f);
-            set(AgeGroup._45_TO_49, 5.6f);
-            set(AgeGroup._50_TO_54, 5.7f);
-            set(AgeGroup._55_TO_59, 5.4f);
-            set(AgeGroup._60_TO_64, 5.0f);
-            set(AgeGroup._65_TO_69, 4.5f);
-            set(AgeGroup._70_TO_74, 3.7f);
-            set(AgeGroup._75_TO_79, 3.1f);
-            set(AgeGroup._80_TO_84, 2.4f);
-            set(AgeGroup._85_TO_89, 1.7f);
-            set(AgeGroup._90_TO_94, 1.0f);
-            set(AgeGroup._95_TO_99, 0.5f);
-            set(AgeGroup._100_PLUS, 0.1f);
+            setValue(AgeGroup._0_TO_9, new FloatParam("0 to 4 years", 11.7f));
+            setValue(AgeGroup._10_TO_19, new FloatParam("15 to 19 years", 11.0f));
+            setValue(AgeGroup._20_TO_29, new FloatParam("25 to 29 years", 12.8f));
+            setValue(AgeGroup._30_TO_39, new FloatParam("35 to 39 years", 12.6f));
+            setValue(AgeGroup._40_TO_49, new FloatParam("40 to 44 years", 11.4f));
+            setValue(AgeGroup._50_TO_59, new FloatParam("50 to 54 years", 11.1f));
+            setValue(AgeGroup._60_TO_69, new FloatParam("60 to 69 years", 9.5f));
+            setValue(AgeGroup._70_TO_79, new FloatParam("70 to 79 years", 6.8f));
+            setValue(AgeGroup._80_TO_89, new FloatParam("80 to 89 years", 4.1f));
+            setValue(AgeGroup._90_PLUS, new FloatParam("90+ years", 1.6f));
         }
     };
-    private float unemploymentRate = 0.05f;
-    private float universityEntryRate = 0.35f;
+    private FloatParam unemploymentRate = new FloatParam("Unemployment Rate", 0.05f);
+    private FloatParam universityEntryRate = new FloatParam("University Entry Rate", 0.35f);
 
-    public void setPopulationSize(int populationSize) {
-        this.populationSize = populationSize;
-    }
-
-    public void setHouseholdSizeDistribution(Distribution<Integer> householdSizeDistribution) {
-        this.householdSizeDistribution = householdSizeDistribution;
-    }
-
-    public void setAgeDistribution(Distribution<AgeGroup> ageDistribution) {
-        this.ageDistribution = ageDistribution;
-    }
-
-    public void setUnemploymentRate(float unemploymentRate) {
-        this.unemploymentRate = unemploymentRate;
-    }
-
-    public void setUniversityEntryRate(float universityEntryRate) {
-        this.universityEntryRate = universityEntryRate;
-    }
-
-    public int getPopulationSize() {
+    public IntegerParam getPopulationSize() {
         return populationSize;
     }
 
-    public Distribution<Integer> getHouseholdSizeDistribution() {
+    public DiscreteDistributionParam<Integer> getHouseholdSizeDistribution() {
         return householdSizeDistribution;
     }
 
-    public Distribution<AgeGroup> getAgeDistribution() {
+    public DiscreteDistributionParam<AgeGroup> getAgeDistribution() {
         return ageDistribution;
     }
 
-    public float getUnemploymentRate() {
+    public FloatParam getUnemploymentRate() {
         return unemploymentRate;
     }
 
-    public float getUniversityEntryRate() {
+    public FloatParam getUniversityEntryRate() {
         return universityEntryRate;
     }
 
@@ -90,9 +63,20 @@ public class PopulationParams {
 
     public PopulationParams(PopulationParams params) {
         populationSize = params.populationSize;
-        householdSizeDistribution = new Distribution<Integer>(params.householdSizeDistribution);
-        ageDistribution = new Distribution<AgeGroup>(params.ageDistribution);
+        householdSizeDistribution = new DiscreteDistributionParam<Integer>(params.householdSizeDistribution);
+        ageDistribution = new DiscreteDistributionParam<AgeGroup>(params.ageDistribution);
         unemploymentRate = params.unemploymentRate;
         universityEntryRate = params.universityEntryRate;
+    }
+
+    public Region getInputUI() {
+        VBox inputs = new VBox(
+                populationSize.getInputUI(),
+                householdSizeDistribution.getInputUI(),
+                ageDistribution.getInputUI(),
+                unemploymentRate.getInputUI(),
+                universityEntryRate.getInputUI());
+        TitledPane titledPane = new TitledPane("Population", inputs);
+        return titledPane;
     }
 }

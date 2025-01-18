@@ -1,32 +1,43 @@
 package simulation.params;
 
-import java.io.File;
+import javafx.scene.control.TitledPane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
-public class EnvironmentParams {
-    private File buildingsFile = new File("maps/map/buildings-polygon.shp");
-    private File roadsFile = new File("maps/map/roads-line.shp");
+public class EnvironmentParams implements IParam {
+    private FileParam buildingsFile = new FileParam("Buildings Shapefile", "maps/map/buildings-polygon.shp");
+    private FileParam roadsFile = new FileParam("Roads Shapefile", "maps/map/roads-line.shp");
+    private IntegerParam hospitalCapacity = new IntegerParam("Total Hospital Capacity", 100);
 
-    public void setBuildingsFile(File buildingsFile) {
-        this.buildingsFile = buildingsFile;
-    }
-
-    public void setRoadsFile(File roadsFile) {
-        this.roadsFile = roadsFile;
-    }
-
-    public File getBuildingsFile() {
+    public FileParam getBuildingsFile() {
         return buildingsFile;
     }
 
-    public File getRoadsFile() {
+    public FileParam getRoadsFile() {
         return roadsFile;
     }
 
-    public EnvironmentParams() {
+    public IntegerParam getHospitalCapacity() {
+        return hospitalCapacity;
+    }
+
+    public EnvironmentParams(Stage stage) {
+        buildingsFile.setStage(stage);
+        roadsFile.setStage(stage);
     };
 
     public EnvironmentParams(EnvironmentParams params) {
         buildingsFile = params.buildingsFile;
         roadsFile = params.roadsFile;
+    }
+
+    public Region getInputUI() {
+        VBox inputs = new VBox(
+                buildingsFile.getInputUI(),
+                roadsFile.getInputUI(),
+                hospitalCapacity.getInputUI());
+        TitledPane titledPane = new TitledPane("Environment", inputs);
+        return titledPane;
     }
 }

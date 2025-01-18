@@ -75,8 +75,7 @@ public class Map extends Pane {
         for (Individual individual : population.getIndividuals()) {
             double x = resolution / 2 + resolution * (individual.getPosition().getX() - centreX) / width;
             double y = resolution / 2 - resolution * (individual.getPosition().getY() - centreY) / height;
-            // graphicsContext.setFill(Color.web(individual.getHealth().getColour()));
-            graphicsContext.setFill(Color.web(individual.getAge() < 18 ? "#FF6B6B" : "#000000"));
+            graphicsContext.setFill(Color.web(individual.getHealth().getState().getColour()));
             graphicsContext.fillOval(x - individualSize / 2, y - individualSize / 2, individualSize, individualSize);
             graphicsContext.setStroke(Color.BLACK);
             graphicsContext.strokeOval(x - individualSize / 2, y - individualSize / 2, individualSize, individualSize);
