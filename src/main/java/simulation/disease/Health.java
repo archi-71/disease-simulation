@@ -12,8 +12,8 @@ public class Health {
     private DiseaseParams params;
     private Individual individual;
     private HealthState state;
-    private double daysInState;
-    private double daysInHospital;
+    private float daysInState;
+    private float daysInHospital;
 
     private float symptomaticProbability;
     private float severeSymptomaticProbability;
@@ -43,15 +43,15 @@ public class Health {
 
     }
 
-    public void update(double deltaTimeDays) {
-        daysInState += deltaTimeDays;
+    public void update(float timeStepDays) {
+        daysInState += timeStepDays;
         switch (state) {
             case SUSCEPTIBLE:
                 HashSet<Individual> contacts = individual.getContacts();
                 for (Individual contact : contacts) {
                     if (contact.getHealth().getState().isInfectious()) {
                         if (Math.random() < 1
-                                - Math.exp(-params.getTransmissionRate().getValue() * deltaTimeDays * 24)) {
+                                - Math.exp(-params.getTransmissionRate().getValue() * timeStepDays * 24)) {
                             transition(HealthState.EXPOSED);
                         }
                     }
@@ -90,7 +90,7 @@ public class Health {
             case SYMPTOMATIC_SEVERE:
                 float relativeMortality = params.getRelativeMortalityWithoutHospitalisation().getValue();
                 if (individual.getActivity() == Activity.HOPSITALISATION) {
-                    daysInHospital += deltaTimeDays;
+                    daysInHospital += timeStepDays;
                     float hospitalFactor = (float) ((daysInState - daysInHospital) / daysInState);
                     relativeMortality = 1
                             + (params.getRelativeMortalityWithoutHospitalisation().getValue() - 1) * hospitalFactor;

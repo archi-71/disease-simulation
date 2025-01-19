@@ -1,11 +1,13 @@
 package simulation.ui;
 
-import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import simulation.core.Simulation;
 import simulation.disease.Disease;
 
 public class Data extends VBox {
+
+    private Simulation simulation;
 
     private Label susceptibleNumLabel;
     private Label exposedNumLabel;
@@ -16,7 +18,9 @@ public class Data extends VBox {
     private Label recoveredNumLabel;
     private Label deceasedNumLabel;
 
-    public Data() {
+    public Data(Simulation simulation) {
+        this.simulation = simulation;
+
         susceptibleNumLabel = new Label();
         exposedNumLabel = new Label();
         infectiousNumLabel = new Label();
@@ -37,17 +41,16 @@ public class Data extends VBox {
                 deceasedNumLabel);
     }
 
-    public void updateData(Disease disease) {
-        Platform.runLater(() -> {
-            susceptibleNumLabel.setText("Susceptible: " + disease.getSusceptibleNum());
-            exposedNumLabel.setText("Exposed: " + disease.getExposedNum());
-            infectiousNumLabel.setText("Infectious: " + disease.getInfectiousNum());
-            asymptomaticLabel.setText("Asymptomatic: " + disease.getAsymptomaticNum());
-            symptomaticMildLabel.setText("Symptomatic (Mild): " + disease.getSymptomaticMildNum());
-            symptomaticSevereLabel.setText("Symptomatic (Severe): " + disease.getSymptomaticSevereNum());
-            recoveredNumLabel.setText("Recovered: " + disease.getRecoveredNum());
-            deceasedNumLabel.setText("Deceased: " + disease.getDeceasedNum());
-        });
+    public void update() {
+        Disease disease = simulation.getDisease();
+        susceptibleNumLabel.setText("Susceptible: " + disease.getSusceptibleNum());
+        exposedNumLabel.setText("Exposed: " + disease.getExposedNum());
+        infectiousNumLabel.setText("Infectious: " + disease.getInfectiousNum());
+        asymptomaticLabel.setText("Asymptomatic: " + disease.getAsymptomaticNum());
+        symptomaticMildLabel.setText("Symptomatic (Mild): " + disease.getSymptomaticMildNum());
+        symptomaticSevereLabel.setText("Symptomatic (Severe): " + disease.getSymptomaticSevereNum());
+        recoveredNumLabel.setText("Recovered: " + disease.getRecoveredNum());
+        deceasedNumLabel.setText("Deceased: " + disease.getDeceasedNum());
     }
 
 }

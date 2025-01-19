@@ -63,9 +63,9 @@ public class Population {
         java.util.Collections.shuffle(individuals);
     }
 
-    public void step(int time, double deltaTime) {
+    public void step(int dayTime) {
         for (Individual individual : individuals) {
-            individual.step(time, deltaTime);
+            individual.step(dayTime);
         }
     }
 

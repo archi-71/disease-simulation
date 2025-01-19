@@ -2,6 +2,7 @@ package simulation.disease;
 
 import java.util.ArrayList;
 
+import simulation.core.Simulation;
 import simulation.params.DiseaseParams;
 import simulation.population.Individual;
 import simulation.population.Population;
@@ -81,11 +82,11 @@ public class Disease {
         deceasedNum = 0;
     }
 
-    public void step(int time, double deltaTime) {
-        double deltaTimeDays = deltaTime / 86400000;
+    public void step(int dayTime) {
+        float timeStepDays = (float)Simulation.timeStep / Simulation.dayLength;
         for (Individual individual : individuals) {
             HealthState oldState = individual.getHealth().getState();
-            individual.getHealth().update(deltaTimeDays);
+            individual.getHealth().update(timeStepDays);
             HealthState newState = individual.getHealth().getState();
             if (oldState != newState) {
                 switch (newState) {

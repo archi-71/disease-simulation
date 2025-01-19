@@ -11,8 +11,8 @@ import simulation.population.Population;
 
 public class Simulation {
 
-    private final int startTime = 32400000;
-    private final int dayLength = 86400000;
+    public static final int timeStep = 60;
+    public static final int dayLength = 86400;
 
     private SimulationParams parameters;
 
@@ -20,13 +20,14 @@ public class Simulation {
     private Population population;
     private Disease disease;
 
+    private SimulationState state;
     private int day;
     private int time;
     private ScheduledExecutorService scheduler;
-    private long lastUpdateTime;
-    private boolean isPaused = true;
-    private double speed = 1000;
-    private Runnable updateCallback;
+    private int speed = 1;
+
+    // private Runnable updateCallback;
+    private Runnable stateChangeCallback;
 
     public SimulationParams getParameters() {
         return parameters;
@@ -44,6 +45,10 @@ public class Simulation {
         return disease;
     }
 
+    public SimulationState getState() {
+        return state;
+    }
+
     public int getDay() {
         return day;
     }
@@ -52,16 +57,20 @@ public class Simulation {
         return time;
     }
 
-    public void setScheduleCallback(Runnable callback) {
-        updateCallback = callback;
+    public int getSpeed() {
+        return speed;
     }
 
-    public boolean isPaused() {
-        return isPaused;
+    public void setStateChangeCallback(Runnable callback) {
+        stateChangeCallback = callback;
+    }
+
+    public Simulation() {
+        changeState(SimulationState.UNINITIALISED);
     }
 
     public void initialise(SimulationParams params) {
-        if (!isPaused) {
+        if (state == SimulationState.PLAYING) {
             pause();
         }
         parameters = new SimulationParams(params);
@@ -69,70 +78,72 @@ public class Simulation {
         population = new Population(parameters.getPopulationParams(), environment);
         disease = new Disease(parameters.getDiseaseParams(), population);
 
+        changeState(SimulationState.PAUSED);
         day = 0;
-        time = startTime;
+        time = dayLength;
         scheduler = Executors.newScheduledThreadPool(1);
     }
 
     public void play() {
-        if (population != null) {
-            isPaused = false;
-            startScheduler();
-        }
+        changeState(SimulationState.PLAYING);
+        startScheduler();
     }
 
     public void pause() {
-        if (population != null) {
-            isPaused = true;
-            stopScheduler();
-        }
+        changeState(SimulationState.PAUSED);
+        stopScheduler();
     }
 
     public void reset() {
-        if (population != null) {
-            if (!isPaused) {
-                pause();
-            }
-            population.reset();
-            disease.reset();
-            day = 0;
-            time = startTime;
-            if (updateCallback != null) {
-                updateCallback.run();
-            }
+        if (state == SimulationState.PLAYING) {
+            stopScheduler();
         }
+        changeState(SimulationState.PAUSED);
+        population.reset();
+        disease.reset();
+        day = 0;
+        time = dayLength;
     }
 
-    public void setSpeed(double speed) {
-        if (population != null) {
-            this.speed = speed;
+    public void setSpeed(int speed) {
+        this.speed = speed;
+        if (state == SimulationState.PLAYING) {
             stopScheduler();
             startScheduler();
         }
     }
 
-    private void step(double deltaTime) {
-        time += (int) deltaTime;
-        if (time >= dayLength) {
-            time -= dayLength;
-            day++;
-        }
-        population.step(time, deltaTime);
-        disease.step(time, deltaTime);
-        if (updateCallback != null) {
-            updateCallback.run();
+    private void changeState(SimulationState newState) {
+        if (state != newState) {
+            state = newState;
+            if (stateChangeCallback != null) {
+                stateChangeCallback.run();
+            }
         }
     }
 
-    private void startScheduler() {
-        lastUpdateTime = System.currentTimeMillis();
-        scheduler.scheduleWithFixedDelay(() -> {
-            if (!isPaused) {
-                long currentUpdateTime = System.currentTimeMillis();
-                step((currentUpdateTime - lastUpdateTime) * speed);
-                lastUpdateTime = currentUpdateTime;
+    private void step() {
+        time += timeStep;
+        if (time >= dayLength) {
+            time -= dayLength;
+            if (day >= parameters.getSimulationDuration().getValue()) {
+                time = 0;
+                changeState(SimulationState.FINISHED);
+                stopScheduler();
+                return;
             }
-        }, 0, 100, TimeUnit.MILLISECONDS);
+            day++;
+        }
+        population.step(time);
+        disease.step(time);
+    }
+
+    private void startScheduler() {
+        scheduler.scheduleAtFixedRate(() -> {
+            if (state == SimulationState.PLAYING) {
+                step();
+            }
+        }, 0, 1000000000 / speed, TimeUnit.NANOSECONDS);
     }
 
     private void stopScheduler() {

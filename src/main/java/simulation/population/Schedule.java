@@ -46,6 +46,6 @@ public class Schedule {
     }
 
     private int getTime(int hours) {
-        return (int) ((hours + Math.random() * range - range / 2) * 60f * 60f * 1000f);
+        return (int) ((hours + Math.random() * range - range / 2) * 3600);
     }
 }

@@ -7,7 +7,7 @@ import simulation.population.AgeGroup;
 
 public class DiseaseParams implements IParam {
 
-    private IntegerParam initialInfected = new IntegerParam("Initital Number Infected", 100);
+    private IntegerParam initialInfected = new IntegerParam("Initital Number Infected", 1);
 
     private FloatParam transmissionRate = new FloatParam("Transmission Rate", 0.3f);
 
@@ -61,19 +61,19 @@ public class DiseaseParams implements IParam {
             "Relative Mortality Without Hospitalisation", 3f);
 
     private GammaDistributionParam exposedToInfectiousPeriod = new GammaDistributionParam(
-            "Exposed to Infectious Period", 0.5f, 0.1f);
+            "Exposed to Infectious Period (days)", 0.5f, 0.1f);
     private GammaDistributionParam infectiousToSymptomaticPeriod = new GammaDistributionParam(
-            "Infectious to Symptomatic Period", 1f, 0.2f);
+            "Infectious to Symptomatic Period (days)", 1f, 0.2f);
     private GammaDistributionParam mildToSevereSymptomaticPeriod = new GammaDistributionParam(
-            "Mild to Severe Symptomatic Period", 0.5f, 0.1f);
+            "Mild to Severe Symptomatic Period (days)", 0.5f, 0.1f);
     private GammaDistributionParam severeSymptomaticToDeathPeriod = new GammaDistributionParam(
-            "Severe Symptomatic to Death Period", 0.5f, 0.1f);
+            "Severe Symptomatic to Death Period (days)", 0.5f, 0.1f);
     private GammaDistributionParam asymptomaticToRecoveredPeriod = new GammaDistributionParam(
-            "Asymptomatic To Recovered Period", 0.5f, 0.1f);
+            "Asymptomatic To Recovered Period (days)", 0.5f, 0.1f);
     private GammaDistributionParam mildSymptomaticToRecoveredPeriod = new GammaDistributionParam(
-            "Mild Symptomatic To Recovered Period", 1f, 0.2f);
+            "Mild Symptomatic To Recovered Period (days)", 1f, 0.2f);
     private GammaDistributionParam severeSymptomaticToRecoveredPeriod = new GammaDistributionParam(
-            "Severe Symptomatic To Recovered Period",
+            "Severe Symptomatic To Recovered Period (days)",
             1.5f, 0.3f);
 
     public IntegerParam getInitialInfected() {

@@ -12,6 +12,7 @@ import java.util.Set;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Point;
 
+import simulation.core.Simulation;
 import simulation.disease.Health;
 import simulation.disease.HealthState;
 import simulation.environment.Building;
@@ -21,7 +22,7 @@ import simulation.environment.Node;
 
 public class Individual {
 
-    private final double speed = 0.000000001;
+    private final double speed = 0.000002;
 
     private Environment environment;
 
@@ -95,7 +96,7 @@ public class Individual {
         hospital = null;
     }
 
-    public void step(int time, double deltaTime) {
+    public void step(int dayTime) {
         if (health.getState() == HealthState.DECEASED)
             return;
         if (health.getState() == HealthState.SYMPTOMATIC_SEVERE) {
@@ -112,13 +113,13 @@ public class Individual {
             if (activity == Activity.HOPSITALISATION) {
                 hospital.dischargePatient();
             }
-            followSchedule(time);
+            followSchedule(dayTime);
         }
-        move(deltaTime);
+        move();
     }
 
-    private void followSchedule(int time) {
-        Activity newActivity = schedule.getActivity(time);
+    private void followSchedule(int dayTime) {
+        Activity newActivity = schedule.getActivity(dayTime);
         switch (newActivity) {
             case SLEEP:
                 if (activity != Activity.SLEEP) {
@@ -133,7 +134,7 @@ public class Individual {
                 }
                 break;
             case LEISURE:
-                if (activity != Activity.LEISURE || route == null && Math.random() < 0.01) {
+                if (activity != Activity.LEISURE || route == null && Math.random() <= 0.01) {
                     activity = Activity.LEISURE;
                     goToLeisure();
                 }
@@ -182,7 +183,8 @@ public class Individual {
         return false;
     }
 
-    private void move(double deltaTime) {
+    private void move() {
+        float deltaTime = Simulation.timeStep;
         if (route == null)
             return;
         do {

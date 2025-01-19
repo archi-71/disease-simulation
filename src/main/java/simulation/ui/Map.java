@@ -11,10 +11,8 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import simulation.core.Simulation;
 import simulation.environment.BuildingType;
-import simulation.environment.Environment;
 import simulation.environment.GISLoader;
 import simulation.population.Individual;
-import simulation.population.Population;
 
 import org.jfree.fx.FXGraphics2D;
 import org.geotools.api.filter.FilterFactory;
@@ -37,6 +35,8 @@ public class Map extends Pane {
     private final int individualSize = 10;
     private final double zoomSpeed = 0.0008;
 
+    private Simulation simulation;
+
     private Canvas environmentCanvas;
     private Canvas populationCanvas;
     private MapContent mapContent;
@@ -56,23 +56,24 @@ public class Map extends Pane {
     private double maxZoom = 2;
     private double minZoom;
 
-    public Map() {
+    public Map(Simulation simulation) {
+        this.simulation = simulation;
         environmentCanvas = new Canvas(resolution, resolution);
         populationCanvas = new Canvas(resolution, resolution);
         getChildren().addAll(environmentCanvas, populationCanvas);
     }
 
-    public void initialise(Simulation simulation) {
-        drawEnvironment(simulation.getEnvironment());
-        drawPopulation(simulation.getPopulation());
+    public void initialise() {
+        drawEnvironment();
+        drawPopulation();
         resetMap();
         initialiseControls();
     }
 
-    public void drawPopulation(Population population) {
+    public void drawPopulation() {
         GraphicsContext graphicsContext = populationCanvas.getGraphicsContext2D();
         graphicsContext.clearRect(0, 0, resolution, resolution);
-        for (Individual individual : population.getIndividuals()) {
+        for (Individual individual : simulation.getPopulation().getIndividuals()) {
             double x = resolution / 2 + resolution * (individual.getPosition().getX() - centreX) / width;
             double y = resolution / 2 - resolution * (individual.getPosition().getY() - centreY) / height;
             graphicsContext.setFill(Color.web(individual.getHealth().getState().getColour()));
@@ -82,8 +83,8 @@ public class Map extends Pane {
         }
     }
 
-    private void drawEnvironment(Environment environment) {
-        GISLoader gisLoader = environment.getGISLoader();
+    private void drawEnvironment() {
+        GISLoader gisLoader = simulation.getEnvironment().getGISLoader();
 
         if (mapContent != null) {
             mapContent.dispose();

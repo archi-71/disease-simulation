@@ -1,6 +1,8 @@
 package simulation.ui;
 
 import javafx.application.Platform;
+import javafx.concurrent.ScheduledService;
+import javafx.concurrent.Task;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -16,6 +18,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import simulation.core.Simulation;
+import simulation.core.SimulationState;
 
 public class Layout {
 
@@ -35,19 +38,54 @@ public class Layout {
     private Map map;
     private Data data;
 
+    private ScheduledService<Void> service;
+
     public Layout(Simulation simulation, Stage stage) {
         this.stage = stage;
         this.simulation = simulation;
         createScene();
-        simulation.setScheduleCallback(() -> {
-            controls.updateTime(simulation);
-            data.updateData(simulation.getDisease());
-            map.drawPopulation(simulation.getPopulation());
+        // simulation.setUpdateCallback(() -> {
+        // controls.update();
+        // data.update();
+        // map.drawPopulation();
+        // });
+        // simulation.setStateChangeCallback(() -> {
+        // controls.stateChange();
+        // });
+
+        simulation.setStateChangeCallback(() -> {
+            if (simulation.getState() == SimulationState.PLAYING) {
+                service = new ScheduledService<Void>() {
+                    @Override
+                    protected Task<Void> createTask() {
+                        return new Task<Void>() {
+                            @Override
+                            protected Void call() throws Exception {
+                                updateUI();
+                                return null;
+                            }
+                        };
+                    }
+                };
+                service.setPeriod(javafx.util.Duration.ZERO);
+                service.start();
+            } else if (service != null) {
+                service.cancel();
+                updateUI();
+            }
         });
     }
 
     public Scene getScene() {
         return scene;
+    }
+
+    private void updateUI() {
+        Platform.runLater(() -> {
+            controls.update();
+            data.update();
+            map.drawPopulation();
+        });
     }
 
     private void createScene() {
@@ -70,7 +108,9 @@ public class Layout {
         Button initialiseSimButton = new Button("Initialise Simulation");
         initialiseSimButton.setOnAction(event -> {
             simulation.initialise(inputParameters.getParameters());
-            map.initialise(simulation);
+            map.initialise();
+            controls.update();
+            data.update();
         });
         HBox initialiseSim = new HBox(initialiseSimButton);
         initialiseSim.setAlignment(Pos.CENTER);
@@ -88,7 +128,7 @@ public class Layout {
         controlsSection.getChildren().addAll(controlsTitle, controls);
 
         // Create map section
-        map = new Map();
+        map = new Map(simulation);
         Pane mapSection = new Pane(map);
         mapSection.setMinHeight(height * minSplit);
         map.prefWidthProperty().bind(mapSection.widthProperty());
@@ -99,7 +139,7 @@ public class Layout {
         mapSection.getChildren().add(mapTitle);
 
         // Create data section
-        data = new Data();
+        data = new Data(simulation);
 
         VBox dataSection = new VBox();
         dataSection.setMinHeight(height * minSplit);

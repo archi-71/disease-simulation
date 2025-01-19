@@ -19,6 +19,10 @@ public class App extends Application {
         Layout layout = new Layout(simulation, stage);
         stage.setScene(layout.getScene());
         stage.show();
+
+        stage.onCloseRequestProperty().set(e -> {
+            simulation.pause();
+        });
     }
 
     public static void main(String[] args) {
