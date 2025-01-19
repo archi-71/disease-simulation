@@ -47,7 +47,9 @@ public class Population {
                 int age = (int) (Math.random() * (ageGroup.getMaxAge() - ageGroup.getMinAge() + 1))
                         + ageGroup.getMinAge();
                 Building workplace;
-                if (age < 5 || age > 65 || (age >= 18 && Math.random() < parameters.getUnemploymentRate().getValue())) {
+                if (age < 5 || age > 65 ||
+                        (age >= 18 && Math.random() < parameters.getUnemploymentRate().getValue()) ||
+                        (age < 18 && Math.random() > parameters.getSchoolEntryRate().getValue())) {
                     workplace = null;
                 } else if (age < 18) {
                     workplace = environment.getRandomSchool(componentID);

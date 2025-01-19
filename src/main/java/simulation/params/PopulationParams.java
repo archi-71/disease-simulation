@@ -35,8 +35,9 @@ public class PopulationParams implements IParam {
             setValue(AgeGroup._90_PLUS, new FloatParam("90+ years", 1.6f));
         }
     };
-    private FloatParam unemploymentRate = new FloatParam("Unemployment Rate", 0.05f);
+    private FloatParam schoolEntryRate = new FloatParam("School Entry Rate", 0.99f);
     private FloatParam universityEntryRate = new FloatParam("University Entry Rate", 0.35f);
+    private FloatParam unemploymentRate = new FloatParam("Unemployment Rate", 0.05f);
 
     public IntegerParam getPopulationSize() {
         return populationSize;
@@ -50,12 +51,16 @@ public class PopulationParams implements IParam {
         return ageDistribution;
     }
 
-    public FloatParam getUnemploymentRate() {
-        return unemploymentRate;
+    public FloatParam getSchoolEntryRate() {
+        return schoolEntryRate;
     }
 
     public FloatParam getUniversityEntryRate() {
         return universityEntryRate;
+    }
+
+    public FloatParam getUnemploymentRate() {
+        return unemploymentRate;
     }
 
     public PopulationParams() {
@@ -65,8 +70,9 @@ public class PopulationParams implements IParam {
         populationSize = params.populationSize;
         householdSizeDistribution = new DiscreteDistributionParam<Integer>(params.householdSizeDistribution);
         ageDistribution = new DiscreteDistributionParam<AgeGroup>(params.ageDistribution);
-        unemploymentRate = params.unemploymentRate;
+        schoolEntryRate = params.schoolEntryRate;
         universityEntryRate = params.universityEntryRate;
+        unemploymentRate = params.unemploymentRate;
     }
 
     public Region getInputUI() {
@@ -74,8 +80,9 @@ public class PopulationParams implements IParam {
                 populationSize.getInputUI(),
                 householdSizeDistribution.getInputUI(),
                 ageDistribution.getInputUI(),
-                unemploymentRate.getInputUI(),
-                universityEntryRate.getInputUI());
+                schoolEntryRate.getInputUI(),
+                universityEntryRate.getInputUI(),
+                unemploymentRate.getInputUI());
         TitledPane titledPane = new TitledPane("Population", inputs);
         return titledPane;
     }
