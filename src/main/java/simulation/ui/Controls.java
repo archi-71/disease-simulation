@@ -24,7 +24,8 @@ public class Controls extends HBox {
         playPauseButton = new Button("Play");
         playPauseButton.setDisable(true);
         playPauseButton.setOnAction(event -> {
-            if (simulation.getState() == SimulationState.PAUSED) {
+            if (simulation.getState() == SimulationState.INITIALISED
+                    || simulation.getState() == SimulationState.PAUSED) {
                 simulation.play();
             } else if (simulation.getState() == SimulationState.PLAYING) {
                 simulation.pause();
@@ -78,13 +79,14 @@ public class Controls extends HBox {
                 playPauseButton.setDisable(true);
                 resetButton.setDisable(true);
                 break;
-            case PLAYING:
-                playPauseButton.setText("Pause");
+            case INITIALISED:
+            case PAUSED:
+                playPauseButton.setText("Play");
                 playPauseButton.setDisable(false);
                 resetButton.setDisable(false);
                 break;
-            case PAUSED:
-                playPauseButton.setText("Play");
+            case PLAYING:
+                playPauseButton.setText("Pause");
                 playPauseButton.setDisable(false);
                 resetButton.setDisable(false);
                 break;

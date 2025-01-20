@@ -13,8 +13,6 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.MultiLineString;
-import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.index.strtree.ItemBoundable;
 import org.locationtech.jts.index.strtree.ItemDistance;
@@ -143,7 +141,7 @@ public class Environment {
         STRtree index = new STRtree();
         while (iterator.hasNext()) {
             SimpleFeature feature = iterator.next();
-            MultiLineString line = (MultiLineString) feature.getDefaultGeometry();
+            Geometry line = (Geometry) feature.getDefaultGeometry();
             Coordinate[] coordinates = line.getCoordinates();
             Node prev = null;
             for (Coordinate coordinate : coordinates) {
@@ -199,7 +197,7 @@ public class Environment {
             iterator = gisLoader.getBuildingFeatures(type).features();
             while (iterator.hasNext()) {
                 SimpleFeature feature = iterator.next();
-                MultiPolygon polygon = (MultiPolygon) feature.getDefaultGeometry();
+                Geometry polygon = (Geometry) feature.getDefaultGeometry();
                 Envelope envelope = polygon.getEnvelopeInternal();
                 envelope.expandBy(0.0001);
                 Point nearestRoad = (Point) index.nearestNeighbour(envelope, polygon, new ItemDistance() {
@@ -210,6 +208,9 @@ public class Environment {
                         return g1.distance(g2);
                     }
                 });
+                if (nearestRoad == null) {
+                    continue;
+                }
                 String key = nearestRoad.getX() + "," + nearestRoad.getY();
                 Node roadNode = roadNodes.get(key);
                 Building building;

@@ -22,7 +22,7 @@ import simulation.environment.Node;
 
 public class Individual {
 
-    private final double speed = 0.000002;
+    private final double speed = 0.00001;
 
     private Environment environment;
 

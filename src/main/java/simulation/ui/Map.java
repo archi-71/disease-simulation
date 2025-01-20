@@ -32,7 +32,9 @@ import org.geotools.styling.SLD;
 public class Map extends Pane {
 
     private final int resolution = 2048;
-    private final int individualSize = 10;
+    private final float roadStrokeWidth = 2f;
+    private final float buildingStrokeWidth = 1f;
+    private final float individualSize = 8f;
     private final double zoomSpeed = 0.0008;
 
     private Simulation simulation;
@@ -64,26 +66,18 @@ public class Map extends Pane {
     }
 
     public void initialise() {
-        drawEnvironment();
-        drawPopulation();
+        initialiseMap();
         resetMap();
         initialiseControls();
+        drawEnvironment();
+        drawPopulation();
     }
 
-    public void drawPopulation() {
-        GraphicsContext graphicsContext = populationCanvas.getGraphicsContext2D();
-        graphicsContext.clearRect(0, 0, resolution, resolution);
-        for (Individual individual : simulation.getPopulation().getIndividuals()) {
-            double x = resolution / 2 + resolution * (individual.getPosition().getX() - centreX) / width;
-            double y = resolution / 2 - resolution * (individual.getPosition().getY() - centreY) / height;
-            graphicsContext.setFill(Color.web(individual.getHealth().getState().getColour()));
-            graphicsContext.fillOval(x - individualSize / 2, y - individualSize / 2, individualSize, individualSize);
-            graphicsContext.setStroke(Color.BLACK);
-            graphicsContext.strokeOval(x - individualSize / 2, y - individualSize / 2, individualSize, individualSize);
-        }
+    public void update() {
+        drawPopulation();
     }
 
-    private void drawEnvironment() {
+    private void initialiseMap() {
         GISLoader gisLoader = simulation.getEnvironment().getGISLoader();
 
         if (mapContent != null) {
@@ -98,7 +92,7 @@ public class Map extends Pane {
             mapContent.addLayer(layer);
         }
 
-        Style roadStyle = SLD.createLineStyle(java.awt.Color.GRAY, 4);
+        Style roadStyle = SLD.createLineStyle(java.awt.Color.GRAY, roadStrokeWidth);
         FeatureLayer roadLayer = new FeatureLayer(gisLoader.getRoadFeatures(), roadStyle);
         mapContent.addLayer(roadLayer);
 
@@ -106,14 +100,6 @@ public class Map extends Pane {
         height = mapContent.getMaxBounds().getHeight();
         centreX = mapContent.getMaxBounds().getCenterX();
         centreY = mapContent.getMaxBounds().getCenterY();
-
-        GraphicsContext graphicsContext = environmentCanvas.getGraphicsContext2D();
-        Rectangle mapRect = mapContent.getViewport().getScreenArea();
-        mapRect.setSize(resolution, resolution);
-        StreamingRenderer draw = new StreamingRenderer();
-        draw.setMapContent(mapContent);
-        FXGraphics2D graphics = new FXGraphics2D(graphicsContext);
-        draw.paint(graphics, mapRect, mapContent.getViewport().getBounds());
     }
 
     private Style createBuildingStyle(String fillColour, String outlineColour) {
@@ -126,7 +112,7 @@ public class Map extends Pane {
 
         Stroke stroke = styleFactory.createStroke(
                 filterFactory.literal(outlineColour),
-                filterFactory.literal(2));
+                filterFactory.literal(buildingStrokeWidth));
 
         PolygonSymbolizer polygonSymbolizer = styleFactory.createPolygonSymbolizer(stroke, fill, null);
 
@@ -139,6 +125,32 @@ public class Map extends Pane {
         Style style = styleFactory.createStyle();
         style.featureTypeStyles().add(featureTypeStyle);
         return style;
+    }
+
+    private void drawEnvironment() {
+        GraphicsContext graphicsContext = environmentCanvas.getGraphicsContext2D();
+        graphicsContext.clearRect(0, 0, resolution, resolution);
+        Rectangle mapRect = mapContent.getViewport().getScreenArea();
+        mapRect.setSize(resolution, resolution);
+        StreamingRenderer draw = new StreamingRenderer();
+        draw.setMapContent(mapContent);
+        FXGraphics2D graphics = new FXGraphics2D(graphicsContext);
+        draw.paint(graphics, mapRect, mapContent.getViewport().getBounds());
+    }
+
+    private void drawPopulation() {
+        float size = individualSize / (float) scaleFactor;
+        GraphicsContext graphicsContext = populationCanvas.getGraphicsContext2D();
+        graphicsContext.clearRect(0, 0, resolution, resolution);
+        for (Individual individual : simulation.getPopulation().getIndividuals()) {
+            double x = resolution / 2 + resolution * (individual.getPosition().getX() - centreX) / width;
+            double y = resolution / 2 - resolution * (individual.getPosition().getY() - centreY) / height;
+            graphicsContext.setFill(Color.web(individual.getHealth().getState().getColour()));
+            graphicsContext.fillOval(x - size / 2, y - size / 2, size, size);
+            graphicsContext.setStroke(Color.BLACK);
+            graphicsContext.setLineWidth(size / 10);
+            graphicsContext.strokeOval(x - size / 2, y - size / 2, size, size);
+        }
     }
 
     private void resetMap() {
@@ -252,6 +264,8 @@ public class Map extends Pane {
                             .setTranslateY(scaleFactor * (newMouseY - oldMouseY) + populationCanvas.getTranslateY());
                     focusX = (getWidth() / 2 - environmentCanvas.getTranslateX()) / resolution;
                     focusY = (getHeight() / 2 - environmentCanvas.getTranslateY()) / resolution;
+
+                    drawPopulation();
 
                     event.consume();
                 }

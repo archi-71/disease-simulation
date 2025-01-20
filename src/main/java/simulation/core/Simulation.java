@@ -11,7 +11,7 @@ import simulation.population.Population;
 
 public class Simulation {
 
-    public static final int timeStep = 60;
+    public static final int timeStep = 600;
     public static final int dayLength = 86400;
 
     private SimulationParams parameters;
@@ -71,17 +71,17 @@ public class Simulation {
 
     public void initialise(SimulationParams params) {
         if (state == SimulationState.PLAYING) {
-            pause();
+            stopScheduler();
         }
+        changeState(SimulationState.UNINITIALISED);
         parameters = new SimulationParams(params);
         environment = new Environment(parameters.getEnvironmentParams());
         population = new Population(parameters.getPopulationParams(), environment);
         disease = new Disease(parameters.getDiseaseParams(), population);
-
-        changeState(SimulationState.PAUSED);
         day = 0;
         time = dayLength;
         scheduler = Executors.newScheduledThreadPool(1);
+        changeState(SimulationState.INITIALISED);
     }
 
     public void play() {
@@ -98,11 +98,12 @@ public class Simulation {
         if (state == SimulationState.PLAYING) {
             stopScheduler();
         }
-        changeState(SimulationState.PAUSED);
+        changeState(SimulationState.UNINITIALISED);
         population.reset();
         disease.reset();
         day = 0;
         time = dayLength;
+        changeState(SimulationState.INITIALISED);
     }
 
     public void setSpeed(int speed) {

@@ -21,7 +21,9 @@ public class App extends Application {
         stage.show();
 
         stage.onCloseRequestProperty().set(e -> {
-            simulation.pause();
+            if (simulation.getState() == SimulationState.PLAYING) {
+                simulation.pause();
+            }
         });
     }
 

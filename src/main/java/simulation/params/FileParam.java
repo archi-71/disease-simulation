@@ -32,13 +32,12 @@ public class FileParam implements IParam {
     public Region getInputUI() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new ExtensionFilter("Shapefiles (*.shp)", "*.shp"));
-        Label label = new Label(name);
+        Label label = new Label(file.getName());
         Button button = new Button("Select file");
         button.setOnAction(event -> {
             file = fileChooser.showOpenDialog(stage);
-            ;
             label.setText(file.getName());
         });
-        return new HBox(new Label("Buildings Shapefile: "), label, button);
+        return new HBox(new Label(name), button, label);
     }
 }

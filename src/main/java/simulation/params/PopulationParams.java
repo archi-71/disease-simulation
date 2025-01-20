@@ -6,7 +6,7 @@ import javafx.scene.layout.VBox;
 import simulation.population.AgeGroup;
 
 public class PopulationParams implements IParam {
-    private IntegerParam populationSize = new IntegerParam("Population Size", 500);
+    private IntegerParam populationSize = new IntegerParam("Population Size", 1000);
     private DiscreteDistributionParam<Integer> householdSizeDistribution = new DiscreteDistributionParam<Integer>(
             "Household Size Distribution") {
         {
@@ -17,7 +17,7 @@ public class PopulationParams implements IParam {
             setValue(5, new FloatParam("5 people", 0.055f));
             setValue(6, new FloatParam("6 people", 0.025f));
             setValue(7, new FloatParam("7 people", 0.015f));
-            setValue(8, new FloatParam("8 people", 0.005f));
+            setValue(8, new FloatParam("8+ people", 0.005f));
         }
     };
     private DiscreteDistributionParam<AgeGroup> ageDistribution = new DiscreteDistributionParam<AgeGroup>(

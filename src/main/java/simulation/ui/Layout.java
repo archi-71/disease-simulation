@@ -44,14 +44,6 @@ public class Layout {
         this.stage = stage;
         this.simulation = simulation;
         createScene();
-        // simulation.setUpdateCallback(() -> {
-        // controls.update();
-        // data.update();
-        // map.drawPopulation();
-        // });
-        // simulation.setStateChangeCallback(() -> {
-        // controls.stateChange();
-        // });
 
         simulation.setStateChangeCallback(() -> {
             if (simulation.getState() == SimulationState.PLAYING) {
@@ -84,7 +76,7 @@ public class Layout {
         Platform.runLater(() -> {
             controls.update();
             data.update();
-            map.drawPopulation();
+            map.update();
         });
     }
 

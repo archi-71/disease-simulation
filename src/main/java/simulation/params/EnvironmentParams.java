@@ -6,8 +6,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class EnvironmentParams implements IParam {
-    private FileParam buildingsFile = new FileParam("Buildings Shapefile", "maps/map/buildings-polygon.shp");
-    private FileParam roadsFile = new FileParam("Roads Shapefile", "maps/map/roads-line.shp");
+    private FileParam buildingsFile = new FileParam("Buildings Shapefile", "maps/small/warwick/buildings.shp");
+    private FileParam roadsFile = new FileParam("Roads Shapefile", "maps/small/warwick/roads.shp");
     private IntegerParam hospitalCapacity = new IntegerParam("Total Hospital Capacity", 100);
 
     public FileParam getBuildingsFile() {
