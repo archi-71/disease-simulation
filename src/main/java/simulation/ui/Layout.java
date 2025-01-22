@@ -27,7 +27,7 @@ public class Layout {
 
     private boolean isResizing = false;
     private double verticalSplit = 0.3;
-    private double horizontalSplit = 0.6;
+    private double horizontalSplit = 0.5;
 
     private Simulation simulation;
     private Stage stage;
@@ -46,7 +46,9 @@ public class Layout {
         createScene();
 
         simulation.setStateChangeCallback(() -> {
-            if (simulation.getState() == SimulationState.PLAYING) {
+            if (simulation.getState() == SimulationState.INITIALISED) {
+                data.reset();
+            } else if (simulation.getState() == SimulationState.PLAYING) {
                 service = new ScheduledService<Void>() {
                     @Override
                     protected Task<Void> createTask() {
@@ -63,8 +65,8 @@ public class Layout {
                 service.start();
             } else if (service != null) {
                 service.cancel();
-                updateUI();
             }
+            updateUI();
         });
     }
 
@@ -75,8 +77,8 @@ public class Layout {
     private void updateUI() {
         Platform.runLater(() -> {
             controls.update();
-            data.update();
             map.update();
+            data.update();
         });
     }
 
@@ -101,8 +103,6 @@ public class Layout {
         initialiseSimButton.setOnAction(event -> {
             simulation.initialise(inputParameters.getParameters());
             map.initialise();
-            controls.update();
-            data.update();
         });
         HBox initialiseSim = new HBox(initialiseSimButton);
         initialiseSim.setAlignment(Pos.CENTER);
@@ -112,11 +112,11 @@ public class Layout {
         // Create controls section
         controls = new Controls(simulation);
 
-        VBox controlsSection = new VBox();
-        controlsSection.setMinHeight(controlsHeight);
-
         Label controlsTitle = new Label("Controls");
         controlsTitle.setStyle("-fx-font-size: 16px;");
+
+        VBox controlsSection = new VBox();
+        controlsSection.setMinHeight(controlsHeight);
         controlsSection.getChildren().addAll(controlsTitle, controls);
 
         // Create map section
@@ -126,19 +126,13 @@ public class Layout {
         map.prefWidthProperty().bind(mapSection.widthProperty());
         map.prefHeightProperty().bind(mapSection.heightProperty());
 
-        Label mapTitle = new Label("Map");
-        mapTitle.setStyle("-fx-font-size: 16px;");
-        mapSection.getChildren().add(mapTitle);
-
         // Create data section
-        data = new Data(simulation);
+        data = new Data(stage, simulation);
 
         VBox dataSection = new VBox();
         dataSection.setMinHeight(height * minSplit);
 
-        Label dataTitle = new Label("Data");
-        dataTitle.setStyle("-fx-font-size: 16px;");
-        dataSection.getChildren().addAll(dataTitle, data);
+        dataSection.getChildren().add(data);
 
         // Combine map and data sections into output section
         SplitPane outputSection = new SplitPane(mapSection, dataSection);
@@ -196,5 +190,8 @@ public class Layout {
                 isResizing = false;
             });
         });
+
+        // Style the scene with CSS
+        scene.getStylesheets().add("/simulation/style.css");
     }
 }

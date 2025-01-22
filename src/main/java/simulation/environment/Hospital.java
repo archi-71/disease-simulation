@@ -2,6 +2,8 @@ package simulation.environment;
 
 import org.locationtech.jts.geom.Geometry;
 
+import simulation.core.SimulationOutput;
+
 public class Hospital extends Building {
 
     private int capacity;
@@ -17,12 +19,14 @@ public class Hospital extends Building {
         this.capacity = capacity;
     }
 
-    public void admitPatient() {
+    public void admitPatient(SimulationOutput output) {
         occupancy++;
+        output.countHospitalAdmission();
     }
 
-    public void dischargePatient() {
+    public void dischargePatient(SimulationOutput output) {
         occupancy--;
+        output.countHospitalDischarge();
     }
 
     public boolean isFull() {

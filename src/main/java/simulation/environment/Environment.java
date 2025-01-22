@@ -25,7 +25,6 @@ public class Environment {
     private EnvironmentParams parameters;
     private GISLoader gisLoader;
 
-    private List<Building> allHomes;
     private HashMap<Integer, List<Building>> homeMap;
     private HashMap<Integer, List<Building>> schoolMap;
     private HashMap<Integer, List<Building>> universityMap;
@@ -38,20 +37,32 @@ public class Environment {
         return gisLoader;
     }
 
-    public List<Building> getAllHomes() {
-        return allHomes;
+    public HashMap<Integer, List<Building>> getHomeMap() {
+        return homeMap;
     }
 
-    public Building getRandomHome() {
-        return allHomes.get((int) (Math.random() * allHomes.size()));
+    public HashMap<Integer, List<Building>> getSchoolMap() {
+        return schoolMap;
     }
 
-    public Building getRandomHome(int componentID) {
-        List<Building> homes = homeMap.get(componentID);
-        if (homes == null) {
-            return null;
-        }
-        return homes.get((int) (Math.random() * homes.size()));
+    public HashMap<Integer, List<Building>> getUniversityMap() {
+        return universityMap;
+    }
+
+    public HashMap<Integer, List<Hospital>> getHospitalMap() {
+        return hospitalMap;
+    }
+
+    public HashMap<Integer, List<Building>> getWorkplaceMap() {
+        return workplaceMap;
+    }
+
+    public HashMap<Integer, List<Building>> getAmenityMap() {
+        return amenityMap;
+    }
+
+    public HashMap<Integer, List<Building>> getNonEssentialMap() {
+        return nonEssentialMap;
     }
 
     public Building getRandomSchool(int componentID) {
@@ -92,14 +103,6 @@ public class Environment {
             return null;
         }
         return amenities.get((int) (Math.random() * amenities.size()));
-    }
-
-    public Building getRandomNonEssential(int componentID) {
-        List<Building> nonEssentials = nonEssentialMap.get(componentID);
-        if (nonEssentials == null) {
-            return null;
-        }
-        return nonEssentials.get((int) (Math.random() * nonEssentials.size()));
     }
 
     public Environment(EnvironmentParams params) {
@@ -185,7 +188,6 @@ public class Environment {
         }
 
         // Add buildings to the graph
-        allHomes = new ArrayList<>();
         homeMap = new HashMap<>();
         schoolMap = new HashMap<>();
         universityMap = new HashMap<>();
@@ -225,7 +227,6 @@ public class Environment {
                 building.setComponentID(componentID);
                 switch (type) {
                     case RESIDENTIAL:
-                        allHomes.add(building);
                         homeMap.computeIfAbsent(componentID, k -> new ArrayList<>()).add(building);
                         break;
                     case SCHOOL:

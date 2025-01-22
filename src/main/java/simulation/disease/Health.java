@@ -2,6 +2,7 @@ package simulation.disease;
 
 import java.util.HashSet;
 
+import simulation.core.SimulationOutput;
 import simulation.params.DiseaseParams;
 import simulation.population.Activity;
 import simulation.population.AgeGroup;
@@ -10,6 +11,7 @@ import simulation.population.Individual;
 public class Health {
 
     private DiseaseParams params;
+    private SimulationOutput output;
     private Individual individual;
     private HealthState state;
     private float daysInState;
@@ -27,10 +29,15 @@ public class Health {
     private float severeSymptomaticToRecoveredPeriod;
     private float randomVal;
 
-    public Health(DiseaseParams params, Individual individual) {
+    public Health(DiseaseParams params, SimulationOutput output, Individual individual) {
+        this.output = output;
         this.params = params;
         this.individual = individual;
         reset();
+    }
+
+    public DiseaseParams getParams() {
+        return params;
     }
 
     public HealthState getState() {
@@ -53,6 +60,8 @@ public class Health {
                         if (Math.random() < 1
                                 - Math.exp(-params.getTransmissionRate().getValue() * timeStepDays * 24)) {
                             transition(HealthState.EXPOSED);
+                            output.countSusceptibleToExposed();
+                            break;
                         }
                     }
                 }
@@ -60,30 +69,36 @@ public class Health {
             case EXPOSED:
                 if (daysInState >= exposedToInfectiousPeriod) {
                     transition(HealthState.INFECTIOUS);
+                    output.countExposedToInfectious();
                 }
                 break;
             case INFECTIOUS:
                 if (daysInState >= infectiousToSymptomaticPeriod) {
                     if (randomVal < symptomaticProbability) {
                         transition(HealthState.SYMPTOMATIC_MILD);
+                        output.countInfectiousToSymptomaticMild();
                     } else {
                         transition(HealthState.ASYMPTOMATIC);
+                        output.countInfectiousToAsymptomatic();
                     }
                 }
                 break;
             case ASYMPTOMATIC:
                 if (daysInState >= asymptomaticToRecoveredPeriod) {
                     transition(HealthState.RECOVERED);
+                    output.countAsymptomaticToRecovered();
                 }
                 break;
             case SYMPTOMATIC_MILD:
                 if (randomVal < severeSymptomaticProbability) {
                     if (daysInState >= mildToSevereSymptomaticPeriod) {
                         transition(HealthState.SYMPTOMATIC_SEVERE);
+                        output.countSymptomaticMildToSymptomaticSevere();
                     }
                 } else {
                     if (daysInState >= mildSymptomaticToRecoveredPeriod) {
                         transition(HealthState.RECOVERED);
+                        output.countSymptomaticMildToRecovered();
                     }
                 }
                 break;
@@ -98,10 +113,15 @@ public class Health {
                 if (randomVal < mortalityProbability * relativeMortality) {
                     if (daysInState >= severeSymptomaticToDeathPeriod) {
                         transition(HealthState.DECEASED);
+                        if (individual.getActivity() == Activity.HOPSITALISATION) {
+                            individual.getHospital().dischargePatient(output);
+                        }
+                        output.countSymptomaticSevereToDeceased();
                     }
                 } else {
                     if (daysInState >= severeSymptomaticToRecoveredPeriod) {
                         transition(HealthState.RECOVERED);
+                        output.countSymptomaticSevereToRecovered();
                     }
                 }
                 break;

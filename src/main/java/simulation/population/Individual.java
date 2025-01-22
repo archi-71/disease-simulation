@@ -13,6 +13,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Point;
 
 import simulation.core.Simulation;
+import simulation.core.SimulationOutput;
 import simulation.disease.Health;
 import simulation.disease.HealthState;
 import simulation.environment.Building;
@@ -25,6 +26,7 @@ public class Individual {
     private final double speed = 0.00001;
 
     private Environment environment;
+    private SimulationOutput output;
 
     // Individual characteristics
     private int age;
@@ -43,8 +45,9 @@ public class Individual {
     private Health health;
     private Hospital hospital;
 
-    public Individual(Environment environment, int age, Building home, Building workplace) {
+    public Individual(Environment environment, SimulationOutput output, int age, Building home, Building workplace) {
         this.environment = environment;
+        this.output = output;
         this.age = age;
         this.home = home;
         this.workplace = workplace;
@@ -72,6 +75,10 @@ public class Individual {
 
     public Health getHealth() {
         return health;
+    }
+
+    public Hospital getHospital() {
+        return hospital;
     }
 
     public void setHealth(Health health) {
@@ -111,7 +118,7 @@ public class Individual {
             }
         } else {
             if (activity == Activity.HOPSITALISATION) {
-                hospital.dischargePatient();
+                hospital.dischargePatient(output);
             }
             followSchedule(dayTime);
         }
@@ -175,7 +182,7 @@ public class Individual {
         Hospital hospital = environment.getRandomHospital(location.getComponentID());
         if (hospital != null && !hospital.isFull()) {
             this.hospital = hospital;
-            hospital.admitPatient();
+            hospital.admitPatient(output);
             route = findRoute(location, hospital);
             routeIndex = 0;
             return true;

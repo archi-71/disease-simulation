@@ -3,6 +3,7 @@ package simulation.population;
 import java.util.ArrayList;
 import java.util.List;
 
+import simulation.core.SimulationOutput;
 import simulation.environment.Building;
 import simulation.environment.Environment;
 import simulation.params.PopulationParams;
@@ -12,17 +13,23 @@ public class Population {
     private PopulationParams parameters;
     private ArrayList<Individual> individuals;
 
-    public Population(PopulationParams params, Environment environment) {
+    public Population(PopulationParams params, Environment environment, SimulationOutput output) {
         parameters = params;
-        populateEnvironment(environment);
+        populateEnvironment(environment, output);
     }
 
     public ArrayList<Individual> getIndividuals() {
         return individuals;
     }
 
-    private void populateEnvironment(Environment environment) {
-        List<Building> homes = environment.getAllHomes();
+    private void populateEnvironment(Environment environment, SimulationOutput output) {
+        // Get all homes and shuffle
+        List<Building> homes = new ArrayList<Building>();
+        for (List<Building> homeList : environment.getHomeMap().values()) {
+            for (Building home : homeList) {
+                homes.add(home);
+            }
+        }
         java.util.Collections.shuffle(homes);
 
         // Generate household sizes
@@ -58,7 +65,7 @@ public class Population {
                 } else {
                     workplace = environment.getRandomWorkplace(componentID);
                 }
-                individuals.add(new Individual(environment, age, home, workplace));
+                individuals.add(new Individual(environment, output, age, home, workplace));
             }
         }
 

@@ -21,6 +21,7 @@ public class Controls extends HBox {
 
     public Controls(Simulation simulation) {
         this.simulation = simulation;
+
         playPauseButton = new Button("Play");
         playPauseButton.setDisable(true);
         playPauseButton.setOnAction(event -> {
@@ -40,7 +41,7 @@ public class Controls extends HBox {
         });
 
         Label speedLabel = new Label("Speed: ");
-        speedSlider = new Slider(1, 46, 1);
+        speedSlider = new Slider(1, 37, 1);
         speedSlider.setMajorTickUnit(1);
         speedSlider.setSnapToTicks(true);
         speedSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
@@ -62,7 +63,6 @@ public class Controls extends HBox {
         timeDisplay.getChildren().add(timeDisplayLabel);
 
         HBox.setHgrow(timeDisplay, Priority.ALWAYS);
-
         getChildren().addAll(controls, timeDisplay);
     }
 

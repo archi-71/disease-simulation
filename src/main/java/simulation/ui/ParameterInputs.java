@@ -10,6 +10,7 @@ public class ParameterInputs extends VBox {
 
     public ParameterInputs(Stage stage) {
         parameters = new SimulationParams(stage);
+
         getChildren().add(parameters.getInputUI());
     }
 

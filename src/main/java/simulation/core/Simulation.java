@@ -15,6 +15,7 @@ public class Simulation {
     public static final int dayLength = 86400;
 
     private SimulationParams parameters;
+    private SimulationOutput output;
 
     private Environment environment;
     private Population population;
@@ -31,6 +32,10 @@ public class Simulation {
 
     public SimulationParams getParameters() {
         return parameters;
+    }
+
+    public SimulationOutput getOutput() {
+        return output;
     }
 
     public Environment getEnvironment() {
@@ -75,11 +80,11 @@ public class Simulation {
         }
         changeState(SimulationState.UNINITIALISED);
         parameters = new SimulationParams(params);
+        output = new SimulationOutput();
         environment = new Environment(parameters.getEnvironmentParams());
-        population = new Population(parameters.getPopulationParams(), environment);
-        disease = new Disease(parameters.getDiseaseParams(), population);
-        day = 0;
-        time = dayLength;
+        population = new Population(parameters.getPopulationParams(), environment, output);
+        disease = new Disease(parameters.getDiseaseParams(), population, output);
+        day = time = 0;
         scheduler = Executors.newScheduledThreadPool(1);
         changeState(SimulationState.INITIALISED);
     }
@@ -99,10 +104,10 @@ public class Simulation {
             stopScheduler();
         }
         changeState(SimulationState.UNINITIALISED);
+        output.reset();
         population.reset();
         disease.reset();
-        day = 0;
-        time = dayLength;
+        day = time = 0;
         changeState(SimulationState.INITIALISED);
     }
 
@@ -124,19 +129,21 @@ public class Simulation {
     }
 
     private void step() {
+        population.step(time);
+        disease.step(time);
+        output.step(time, day);
+
         time += timeStep;
         if (time >= dayLength) {
             time -= dayLength;
+            day++;
             if (day >= parameters.getSimulationDuration().getValue()) {
+                output.step(time, day);
                 time = 0;
                 changeState(SimulationState.FINISHED);
                 stopScheduler();
-                return;
             }
-            day++;
         }
-        population.step(time);
-        disease.step(time);
     }
 
     private void startScheduler() {
