@@ -32,6 +32,7 @@ public class Individual {
     private int age;
     private Building home;
     private Building workplace;
+    private boolean isEssential;
     private Schedule schedule;
     private List<Node> homeToWorkplace;
     private List<Node> workplaceToHome;
@@ -51,9 +52,9 @@ public class Individual {
         this.age = age;
         this.home = home;
         this.workplace = workplace;
-        boolean isWorking = workplace != null;
-        schedule = new Schedule(age, isWorking);
-        if (isWorking) {
+        isEssential = workplace != null && workplace.isEssential();
+        schedule = new Schedule(age, workplace != null);
+        if (workplace != null) {
             homeToWorkplace = findRoute(home, workplace);
             workplaceToHome = new ArrayList<>(homeToWorkplace);
             java.util.Collections.reverse(workplaceToHome);
@@ -104,11 +105,12 @@ public class Individual {
     }
 
     public void step(int dayTime) {
+        // Skip individual if deceased
         if (health.getState() == HealthState.DECEASED)
             return;
+        // Attempt to hospitalise individual if severely symptomatic
         if (health.getState() == HealthState.SYMPTOMATIC_SEVERE) {
             if (activity != Activity.HOPSITALISATION) {
-                // Go to hospital if possible, otherwise isolate at home
                 if (goToHospital()) {
                     activity = Activity.HOPSITALISATION;
                 } else if (activity != Activity.ISOLATION) {
@@ -116,12 +118,18 @@ public class Individual {
                     goToHome();
                 }
             }
+        // Isolate individual if needed
+        } else if (activity != Activity.ISOLATION && health.isSelfIsolating()) {
+            activity = Activity.ISOLATION;
+            goToHome();
+        // Otherwise follow normal schedule
         } else {
             if (activity == Activity.HOPSITALISATION) {
                 hospital.dischargePatient(output);
             }
             followSchedule(dayTime);
         }
+        // Move individual along route
         move();
     }
 
@@ -159,17 +167,21 @@ public class Individual {
     }
 
     private void goToWork() {
-        if (location == home)
-            route = homeToWorkplace;
-        else
-            route = findRoute(location, workplace);
-        routeIndex = 0;
+        if ((!health.inLockdown() || isEssential) && !workplace.isClosed()) {
+            if (location == home)
+                route = homeToWorkplace;
+            else
+                route = findRoute(location, workplace);
+            routeIndex = 0;
+            return;
+        }
+        goToHome();
     }
 
     private void goToLeisure() {
-        if (Math.random() < 0.5) {
+        if (!health.inLockdown() && Math.random() < 0.5) {
             Building amenity = environment.getRandomAmenity(location.getComponentID());
-            if (amenity != null) {
+            if (amenity != null && !amenity.isClosed()) {
                 route = findRoute(location, amenity);
                 routeIndex = 0;
                 return;

@@ -23,14 +23,7 @@ public class Population {
     }
 
     private void populateEnvironment(Environment environment, SimulationOutput output) {
-        // Get all homes and shuffle
-        List<Building> homes = new ArrayList<Building>();
-        for (List<Building> homeList : environment.getHomeMap().values()) {
-            for (Building home : homeList) {
-                homes.add(home);
-            }
-        }
-        java.util.Collections.shuffle(homes);
+        List<Building> homes = environment.getHomes();
 
         // Generate household sizes
         ArrayList<Integer> households = new ArrayList<>();
@@ -68,8 +61,6 @@ public class Population {
                 individuals.add(new Individual(environment, output, age, home, workplace));
             }
         }
-
-        java.util.Collections.shuffle(individuals);
     }
 
     public void step(int dayTime) {

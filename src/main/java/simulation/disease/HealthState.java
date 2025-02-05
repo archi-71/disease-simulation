@@ -26,6 +26,10 @@ public enum HealthState {
         return colour;
     }
 
+    public boolean isInfected() {
+        return this == EXPOSED || isInfectious();
+    }
+
     public boolean isInfectious() {
         return this == INFECTIOUS || this == ASYMPTOMATIC || this == SYMPTOMATIC_MILD || this == SYMPTOMATIC_SEVERE;
     }

@@ -4,10 +4,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import simulation.disease.Disease;
-import simulation.environment.Environment;
 import simulation.params.SimulationParams;
+import simulation.environment.Environment;
+import simulation.interventions.Interventions;
 import simulation.population.Population;
+import simulation.disease.Disease;
 
 public class Simulation {
 
@@ -20,6 +21,7 @@ public class Simulation {
     private Environment environment;
     private Population population;
     private Disease disease;
+    private Interventions interventions;
 
     private SimulationState state;
     private int day;
@@ -27,7 +29,6 @@ public class Simulation {
     private ScheduledExecutorService scheduler;
     private int speed = 1;
 
-    // private Runnable updateCallback;
     private Runnable stateChangeCallback;
 
     public SimulationParams getParameters() {
@@ -48,6 +49,10 @@ public class Simulation {
 
     public Disease getDisease() {
         return disease;
+    }
+
+    public Interventions getInterventions() {
+        return interventions;
     }
 
     public SimulationState getState() {
@@ -80,10 +85,11 @@ public class Simulation {
         }
         changeState(SimulationState.UNINITIALISED);
         parameters = new SimulationParams(params);
-        output = new SimulationOutput();
         environment = new Environment(parameters.getEnvironmentParams());
+        interventions = new Interventions(parameters.getInterventionParams(), environment);
+        output = new SimulationOutput(interventions);
         population = new Population(parameters.getPopulationParams(), environment, output);
-        disease = new Disease(parameters.getDiseaseParams(), population, output);
+        disease = new Disease(parameters.getDiseaseParams(), population, interventions, output);
         day = time = 0;
         scheduler = Executors.newScheduledThreadPool(1);
         changeState(SimulationState.INITIALISED);
@@ -107,6 +113,7 @@ public class Simulation {
         output.reset();
         population.reset();
         disease.reset();
+        interventions.reset();
         day = time = 0;
         changeState(SimulationState.INITIALISED);
     }
@@ -137,6 +144,7 @@ public class Simulation {
         if (time >= dayLength) {
             time -= dayLength;
             day++;
+            interventions.step(day);
             if (day >= parameters.getSimulationDuration().getValue()) {
                 output.step(time, day);
                 time = 0;

@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javafx.geometry.Pos;
@@ -33,6 +34,7 @@ public class Data extends VBox {
     private LineGraph cumulativeCaseGraph;
     private LineGraph hospitalisationGraph;
     private LineGraph deathGraph;
+    private LineGraph vaccinationGraph;
 
     public Data(Stage stage, Simulation simulation) {
         this.stage = stage;
@@ -47,9 +49,10 @@ public class Data extends VBox {
         Tab cumulativeCaseTab = new Tab("Cumulative Cases");
         Tab hospitalisationTab = new Tab("Hospitalisations");
         Tab deathTab = new Tab("Deaths");
+        Tab vaccinationTab = new Tab("Vaccinations");
 
         tabPane.getTabs().addAll(stateDistributionTab, incidentCaseTab, prevalentCaseTab, cumulativeCaseTab,
-                hospitalisationTab, deathTab);
+                hospitalisationTab, deathTab, vaccinationTab);
 
         getChildren().add(tabPane);
     }
@@ -60,7 +63,7 @@ public class Data extends VBox {
 
         stateDistributionGraph = new StackedAreaGraph("State Distribution", "Population", population, duration);
         for (HealthState state : HealthState.values()) {
-            stateDistributionGraph.addSeries(state.getName(), state.getColour());
+            stateDistributionGraph.addSeries(state.getName());
         }
         Button stateDistributionExportButton = new Button("Export data as CSV");
         stateDistributionExportButton.setOnAction(event -> {
@@ -75,6 +78,7 @@ public class Data extends VBox {
         tabPane.getTabs().get(0).setContent(new VBox(stateDistributionGraph, stateDistributionExport));
 
         incidentCaseGraph = new LineGraph("Incident Cases", "New Cases (per hour)", population, duration);
+        incidentCaseGraph.addSeries("Incident Cases", "red");
         Button incidentCaseExportButton = new Button("Export data as CSV");
         incidentCaseExportButton.setOnAction(event -> {
             exportData(
@@ -87,6 +91,7 @@ public class Data extends VBox {
         tabPane.getTabs().get(1).setContent(new VBox(incidentCaseGraph, incidentCaseExport));
 
         prevalentCaseGraph = new LineGraph("Prevalent Cases", "Current Cases", population, duration);
+        prevalentCaseGraph.addSeries("Prevalent Cases", "red");
         Button prevalentCaseExportButton = new Button("Export data as CSV");
         prevalentCaseExportButton.setOnAction(event -> {
             exportData(
@@ -99,6 +104,7 @@ public class Data extends VBox {
         tabPane.getTabs().get(2).setContent(new VBox(prevalentCaseGraph, prevalentCaseExport));
 
         cumulativeCaseGraph = new LineGraph("Cumulative Cases", "Total Cases", population, duration);
+        cumulativeCaseGraph.addSeries("Cumulative Cases", "red");
         Button cumulativeCaseExportButton = new Button("Export data as CSV");
         cumulativeCaseExportButton.setOnAction(event -> {
             exportData(
@@ -111,6 +117,7 @@ public class Data extends VBox {
         tabPane.getTabs().get(3).setContent(new VBox(cumulativeCaseGraph, cumulativeCaseExport));
 
         hospitalisationGraph = new LineGraph("Hospitalisations", "Hospitalised Cases", population, duration);
+        hospitalisationGraph.addSeries("Hospitalisations", "red");
         Button hospitalisationExportButton = new Button("Export data as CSV");
         hospitalisationExportButton.setOnAction(event -> {
             exportData(
@@ -123,6 +130,7 @@ public class Data extends VBox {
         tabPane.getTabs().get(4).setContent(new VBox(hospitalisationGraph, hospitalisationExport));
 
         deathGraph = new LineGraph("Deaths", "Deaths", population, duration);
+        deathGraph.addSeries("Deaths", "black");
         Button deathExportButton = new Button("Export data as CSV");
         deathExportButton.setOnAction(event -> {
             exportData(
@@ -133,6 +141,26 @@ public class Data extends VBox {
         HBox deathExport = new HBox(deathExportButton);
         deathExport.setAlignment(Pos.CENTER_RIGHT);
         tabPane.getTabs().get(5).setContent(new VBox(deathGraph, deathExport));
+
+        vaccinationGraph = new LineGraph("Vaccinations", "Vaccine Coverage", population, duration, true);
+        for (int i = 0; i < simulation.getOutput().getVaccineNumber(); i++) {
+            vaccinationGraph.addSeries("Vaccine " + (i + 1));
+        }
+        Button vaccinationExportButton = new Button("Export data as CSV");
+        vaccinationExportButton.setOnAction(event -> {
+            List<String> headerNames = new ArrayList<String>();
+            headerNames.add("timestamp");
+            for (int i = 0; i < simulation.getOutput().getVaccineNumber(); i++) {
+                headerNames.add("vaccine_" + (i + 1));
+            }
+            exportData(
+                    "vaccinations.csv",
+                    headerNames,
+                    simulation.getOutput().getVaccinationData());
+        });
+        HBox vaccinationExport = new HBox(vaccinationExportButton);
+        vaccinationExport.setAlignment(Pos.CENTER_RIGHT);
+        tabPane.getTabs().get(6).setContent(new VBox(vaccinationGraph, vaccinationExport));
 
         tabPane.requestLayout();
     }
@@ -146,6 +174,7 @@ public class Data extends VBox {
         cumulativeCaseGraph.update(output.getCumulativeCaseData());
         hospitalisationGraph.update(output.getHospitalisationData());
         deathGraph.update(output.getDeathData());
+        vaccinationGraph.update(output.getVaccinationData());
     }
 
     private void exportData(String filename, List<String> headerNames, List<List<Integer>> data) {

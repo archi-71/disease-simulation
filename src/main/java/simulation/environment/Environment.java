@@ -1,6 +1,7 @@
 package simulation.environment;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,32 +38,48 @@ public class Environment {
         return gisLoader;
     }
 
-    public HashMap<Integer, List<Building>> getHomeMap() {
-        return homeMap;
+    public List<Building> getHomes() {
+        List<Building> homes = new ArrayList<Building>();
+        for (List<Building> homeList : homeMap.values()) {
+            for (Building home : homeList) {
+                homes.add(home);
+            }
+        }
+        Collections.shuffle(homes);
+        return homes;
     }
 
-    public HashMap<Integer, List<Building>> getSchoolMap() {
-        return schoolMap;
+    public List<Building> getSchools() {
+        List<Building> schools = new ArrayList<Building>();
+        for (List<Building> schoolList : schoolMap.values()) {
+            for (Building school : schoolList) {
+                schools.add(school);
+            }
+        }
+        Collections.shuffle(schools);
+        return schools;
     }
 
-    public HashMap<Integer, List<Building>> getUniversityMap() {
-        return universityMap;
+    public List<Building> getUniversities() {
+        List<Building> universities = new ArrayList<Building>();
+        for (List<Building> universityList : universityMap.values()) {
+            for (Building university : universityList) {
+                universities.add(university);
+            }
+        }
+        Collections.shuffle(universities);
+        return universities;
     }
 
-    public HashMap<Integer, List<Hospital>> getHospitalMap() {
-        return hospitalMap;
-    }
-
-    public HashMap<Integer, List<Building>> getWorkplaceMap() {
-        return workplaceMap;
-    }
-
-    public HashMap<Integer, List<Building>> getAmenityMap() {
-        return amenityMap;
-    }
-
-    public HashMap<Integer, List<Building>> getNonEssentialMap() {
-        return nonEssentialMap;
+    public List<Building> getNonEssentialWorkplaces() {
+        List<Building> nonEssentialWorkplaces = new ArrayList<Building>();
+        for (List<Building> nonEssentialList : nonEssentialMap.values()) {
+            for (Building nonEssential : nonEssentialList) {
+                nonEssentialWorkplaces.add(nonEssential);
+            }
+        }
+        Collections.shuffle(nonEssentialWorkplaces);
+        return nonEssentialWorkplaces;
     }
 
     public Building getRandomSchool(int componentID) {

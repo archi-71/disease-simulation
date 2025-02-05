@@ -42,7 +42,7 @@ public class StackedAreaGraph extends StackedAreaChart<Number, Number> {
         seriesList = new ArrayList<>();
     }
 
-    public void addSeries(String name, String colour) {
+    public void addSeries(String name) {
         Series<Number, Number> series = new Series<>();
         series.setName(name);
         getData().add(series);

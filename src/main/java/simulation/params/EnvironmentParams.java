@@ -25,7 +25,7 @@ public class EnvironmentParams implements IParam {
     public EnvironmentParams(Stage stage) {
         buildingsFile.setStage(stage);
         roadsFile.setStage(stage);
-    };
+    }
 
     public EnvironmentParams(EnvironmentParams params) {
         buildingsFile = params.buildingsFile;

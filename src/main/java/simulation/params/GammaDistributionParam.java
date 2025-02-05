@@ -28,7 +28,7 @@ public class GammaDistributionParam implements IParam {
     }
 
     public Region getInputUI() {
-        Label meanLabel = new Label("Mean: ");
+        Label meanLabel = new Label("Mean");
         TextField meanField = new TextField();
         meanField.setText(String.valueOf(mean));
         meanField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -41,7 +41,7 @@ public class GammaDistributionParam implements IParam {
         });
         HBox meanInput = new HBox(meanLabel, meanField);
 
-        Label standardDeviationLabel = new Label("Standard Deviation: ");
+        Label standardDeviationLabel = new Label("Standard Deviation");
         TextField standardDeviationField = new TextField();
         standardDeviationField.setText(String.valueOf(standardDeviation));
         standardDeviationField.textProperty().addListener((observable, oldValue, newValue) -> {

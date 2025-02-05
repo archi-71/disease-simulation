@@ -3,6 +3,10 @@ package simulation.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import simulation.interventions.InterventionType;
+import simulation.interventions.Interventions;
+import simulation.params.InterventionParam;
+
 public class SimulationOutput {
 
     private final int incidentCasePeriod = 3600;
@@ -13,6 +17,7 @@ public class SimulationOutput {
     private List<List<Integer>> cumulativeCaseData;
     private List<List<Integer>> hospitalisationData;
     private List<List<Integer>> deathData;
+    private List<List<Integer>> vaccinationData;
 
     private int susceptibleNum;
     private int exposedNum;
@@ -26,6 +31,7 @@ public class SimulationOutput {
     private int incidentCases;
     private int prevalentCases;
     private int cumulativeCases;
+    private List<Integer> vaccinationCounts;
 
     public List<List<Integer>> getStateDistibutionData() {
         return stateDistributionData;
@@ -43,16 +49,35 @@ public class SimulationOutput {
         return cumulativeCaseData;
     }
 
-    public List<List<Integer>> getDeathData() {
-        return deathData;
-    }
-
     public List<List<Integer>> getHospitalisationData() {
         return hospitalisationData;
     }
 
+    public List<List<Integer>> getDeathData() {
+        return deathData;
+    }
+
+    public List<List<Integer>> getVaccinationData() {
+        return vaccinationData;
+    }
+
+    public int getVaccineNumber() {
+        return vaccinationCounts.size();
+    }
+
     public void setSusceptibleNum(int susceptibleNum) {
         this.susceptibleNum = susceptibleNum;
+    }
+
+    public SimulationOutput(Interventions interventions) {
+        // Initialise count for each vaccine
+        vaccinationCounts = new ArrayList<Integer>();
+        for (InterventionParam intervention : interventions.getParameters().getInterventions()) {
+            if (intervention.getType() == InterventionType.VACCINATION) {
+                vaccinationCounts.add(0);
+            }
+        }
+        reset();
     }
 
     public void countSusceptibleToExposed() {
@@ -115,8 +140,37 @@ public class SimulationOutput {
         hospitalisedNum--;
     }
 
-    public SimulationOutput() {
-        reset();
+    public void countVaccination(int vaccineNumber) {
+        vaccinationCounts.set(vaccineNumber - 1, vaccinationCounts.get(vaccineNumber - 1) + 1);
+    }
+
+    public void step(int time, int day) {
+        int timestamp = day * Simulation.dayLength + time;
+
+        stateDistributionData.add(new ArrayList<>(List.of(
+                timestamp,
+                susceptibleNum,
+                exposedNum,
+                infectiousNum,
+                asymptomaticNum,
+                symptomaticMildNum,
+                symptomaticSevereNum,
+                deceasedNum,
+                recoveredNum)));
+
+        if (timestamp % incidentCasePeriod == 0) {
+            incidentCaseData.add(new ArrayList<>(List.of(timestamp, incidentCases)));
+            incidentCases = 0;
+        }
+        prevalentCaseData.add(new ArrayList<>(List.of(timestamp, prevalentCases)));
+        cumulativeCaseData.add(new ArrayList<>(List.of(timestamp, cumulativeCases)));
+        hospitalisationData.add(new ArrayList<>(List.of(timestamp, hospitalisedNum)));
+        deathData.add(new ArrayList<>(List.of(timestamp, deceasedNum)));
+
+        List<Integer> vaccinationEntry = new ArrayList<Integer>();
+        vaccinationEntry.add(timestamp);
+        vaccinationEntry.addAll(vaccinationCounts);
+        vaccinationData.add(vaccinationEntry);
     }
 
     public void reset() {
@@ -126,6 +180,7 @@ public class SimulationOutput {
         cumulativeCaseData = new ArrayList<>();
         hospitalisationData = new ArrayList<>();
         deathData = new ArrayList<>();
+        vaccinationData = new ArrayList<>();
 
         susceptibleNum = 0;
         exposedNum = 0;
@@ -139,27 +194,8 @@ public class SimulationOutput {
         incidentCases = 0;
         prevalentCases = 0;
         cumulativeCases = 0;
-    }
-
-    public void step(int time, int day) {
-        int timestamp = day * Simulation.dayLength + time;
-        stateDistributionData.add(new ArrayList<>(List.of(
-                timestamp,
-                susceptibleNum,
-                exposedNum,
-                infectiousNum,
-                asymptomaticNum,
-                symptomaticMildNum,
-                symptomaticSevereNum,
-                deceasedNum,
-                recoveredNum)));
-        if (timestamp % incidentCasePeriod == 0) {
-            incidentCaseData.add(new ArrayList<>(List.of(timestamp, incidentCases)));
-            incidentCases = 0;
+        for (int i = 0; i < vaccinationCounts.size(); i++) {
+            vaccinationCounts.set(i, 0);
         }
-        prevalentCaseData.add(new ArrayList<>(List.of(timestamp, prevalentCases)));
-        cumulativeCaseData.add(new ArrayList<>(List.of(timestamp, cumulativeCases)));
-        hospitalisationData.add(new ArrayList<>(List.of(timestamp, hospitalisedNum)));
-        deathData.add(new ArrayList<>(List.of(timestamp, deceasedNum)));
     }
 }

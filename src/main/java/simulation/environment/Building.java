@@ -13,6 +13,7 @@ public class Building extends Node {
     private String id;
     private BuildingType type;
     private HashSet<Individual> occupants;
+    private boolean closed;
 
     public String getID() {
         return id;
@@ -26,11 +27,36 @@ public class Building extends Node {
         return occupants;
     }
 
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public void setClosed(boolean closed) {
+        this.closed = closed;
+    }
+
     public Building(Geometry geometry, String id, BuildingType type) {
         super(geometry);
         this.id = id;
         this.type = type;
         occupants = new HashSet<>();
+    }
+
+    public void addOccupant(Individual individual) {
+        occupants.add(individual);
+    }
+
+    public void removeOccupant(Individual individual) {
+        occupants.remove(individual);
+    }
+
+    public boolean isEssential() {
+        return type == BuildingType.ESSENTIAL_AMENITY || type == BuildingType.ESSENTIAL_WORKPLACE;
+    }
+
+    public void reset() {
+        occupants.clear();
+        closed = false;
     }
 
     @Override
@@ -50,21 +76,5 @@ public class Building extends Node {
         } while (!geometry.contains(randomPoint));
 
         return randomPoint;
-    }
-
-    public void addOccupant(Individual individual) {
-        occupants.add(individual);
-    }
-
-    public void removeOccupant(Individual individual) {
-        occupants.remove(individual);
-    }
-
-    public void reset() {
-        occupants.clear();
-    }
-
-    public String toString() {
-        return "Building " + id + " (" + type + ")";
     }
 }

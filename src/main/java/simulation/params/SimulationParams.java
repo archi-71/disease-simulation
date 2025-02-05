@@ -11,6 +11,7 @@ public class SimulationParams implements IParam {
     private EnvironmentParams environmentParams;
     private PopulationParams populationParams;
     private DiseaseParams diseaseParams;
+    private InterventionParams interventionParams;
 
     public IntegerParam getSimulationDuration() {
         return simulationDuration;
@@ -28,10 +29,15 @@ public class SimulationParams implements IParam {
         return diseaseParams;
     }
 
+    public InterventionParams getInterventionParams() {
+        return interventionParams;
+    }
+
     public SimulationParams(Stage stage) {
         environmentParams = new EnvironmentParams(stage);
         populationParams = new PopulationParams();
         diseaseParams = new DiseaseParams();
+        interventionParams = new InterventionParams();
     };
 
     public SimulationParams(SimulationParams params) {
@@ -39,6 +45,7 @@ public class SimulationParams implements IParam {
         environmentParams = params.environmentParams;
         populationParams = params.populationParams;
         diseaseParams = params.diseaseParams;
+        interventionParams = params.interventionParams;
     }
 
     public Region getInputUI() {
@@ -46,7 +53,8 @@ public class SimulationParams implements IParam {
                 simulationDuration.getInputUI(),
                 environmentParams.getInputUI(),
                 populationParams.getInputUI(),
-                diseaseParams.getInputUI());
+                diseaseParams.getInputUI(),
+                interventionParams.getInputUI());
         return container;
     }
 }

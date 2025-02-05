@@ -64,7 +64,7 @@ public class PopulationParams implements IParam {
     }
 
     public PopulationParams() {
-    };
+    }
 
     public PopulationParams(PopulationParams params) {
         populationSize = params.populationSize;

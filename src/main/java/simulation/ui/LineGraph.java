@@ -1,16 +1,22 @@
 package simulation.ui;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import simulation.core.Simulation;
 
 public class LineGraph extends LineChart<Number, Number> {
 
-    private Series<Number, Number> series;
+    private List<Series<Number, Number>> seriesList;
 
     public LineGraph(String title, String yAxisLabel, int population, int duration) {
+        this(title, yAxisLabel, population, duration, false);
+    }
+
+    public LineGraph(String title, String yAxisLabel, int population, int duration, boolean showLegend) {
         super(new NumberAxis(), new NumberAxis());
 
         NumberAxis xAxis = (NumberAxis) getXAxis();
@@ -33,17 +39,29 @@ public class LineGraph extends LineChart<Number, Number> {
 
         setTitle(title);
         setCreateSymbols(false);
-        setLegendVisible(false);
+        setLegendVisible(showLegend);
 
-        series = new Series<>();
+        seriesList = new ArrayList<>();
+    }
+
+    public void addSeries(String name) {
+        Series<Number, Number> series = new Series<>();
+        series.setName(name);
         getData().add(series);
-        series.getNode().setStyle("-fx-stroke: red;");
+        seriesList.add(series);
+    }
+
+    public void addSeries(String name, String colour) {
+        addSeries(name);
+        seriesList.get(seriesList.size() - 1).getNode().setStyle("-fx-stroke: " + colour + ";");
     }
 
     public void update(List<List<Integer>> updatedSeries) {
-        List<Data<Number, Number>> seriesData = series.getData();
-        for (int i = seriesData.size(); i < updatedSeries.size(); i++) {
-            seriesData.add(new Data<>(updatedSeries.get(i).get(0), updatedSeries.get(i).get(1)));
+        for (int i = 0; i < seriesList.size(); i++) {
+            List<Data<Number, Number>> seriesData = seriesList.get(i).getData();
+            for (int j = seriesData.size(); j < updatedSeries.size(); j++) {
+                seriesData.add(new XYChart.Data<>(updatedSeries.get(j).get(0), updatedSeries.get(j).get(i + 1)));
+            }
         }
     }
 }

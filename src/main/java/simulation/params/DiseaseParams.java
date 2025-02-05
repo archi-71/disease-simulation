@@ -9,7 +9,7 @@ public class DiseaseParams implements IParam {
 
     private IntegerParam initialInfected = new IntegerParam("Initital Number Infected", 1);
 
-    private FloatParam transmissionRate = new FloatParam("Transmission Rate", 0.5f);
+    private FloatParam transmissionRate = new FloatParam("Transmission Rate", 5f);
 
     private MapParam<AgeGroup, FloatParam> symptomaticProbability = new MapParam<AgeGroup, FloatParam>(
             "Symptomatic Probability By Age") {
@@ -129,7 +129,7 @@ public class DiseaseParams implements IParam {
     }
 
     public DiseaseParams() {
-    };
+    }
 
     public DiseaseParams(DiseaseParams params) {
         initialInfected = params.initialInfected;
