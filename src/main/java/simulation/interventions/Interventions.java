@@ -5,6 +5,7 @@ import java.util.PriorityQueue;
 
 import simulation.params.InterventionParam;
 import simulation.params.InterventionParams;
+import simulation.core.InitialisationException;
 import simulation.environment.Building;
 import simulation.environment.Environment;
 
@@ -184,12 +185,36 @@ public class Interventions {
         return vaccinationCompliance;
     }
 
-    public Interventions(InterventionParams parameters, Environment environment) {
-        this.parameters = parameters;
+    public void initialise(InterventionParams params, Environment environment) throws InitialisationException {
+        // Validate intervention parameters
+        for (InterventionParam intervention : params.getInterventions()) {
+            if (intervention.getStart().getValue() > intervention.getEnd().getValue()) {
+                throw new InitialisationException("Interventions cannot end before they start");
+            }
+        }
+
+        parameters = params;
         schools = environment.getSchools();
         universities = environment.getUniversities();
         nonEssentialWorkplaces = environment.getNonEssentialWorkplaces();
         reset();
+    }
+
+    public void step(int day) {
+        // End old interventions
+        InterventionParam nextToEnd = activeInterventions.peek();
+        while (nextToEnd != null && nextToEnd.getEnd().getValue() <= day) {
+            endIntervention(nextToEnd);
+            activeInterventions.poll();
+            nextToEnd = activeInterventions.peek();
+        }
+        // Start new interventions
+        InterventionParam nextToStart = inactiveInterventions.peek();
+        while (nextToStart != null && nextToStart.getStart().getValue() - 1 <= day) {
+            startIntervention(nextToStart);
+            activeInterventions.add(inactiveInterventions.poll());
+            nextToStart = inactiveInterventions.peek();
+        }
     }
 
     public void reset() {
@@ -210,23 +235,6 @@ public class Interventions {
         vaccination = false;
         vaccineNumber = 0;
         step(0);
-    }
-
-    public void step(int day) {
-        // End old interventions
-        InterventionParam nextToEnd = activeInterventions.peek();
-        while (nextToEnd != null && nextToEnd.getEnd().getValue() <= day) {
-            endIntervention(nextToEnd);
-            activeInterventions.poll();
-            nextToEnd = activeInterventions.peek();
-        }
-        // Start new interventions
-        InterventionParam nextToStart = inactiveInterventions.peek();
-        while (nextToStart != null && nextToStart.getStart().getValue() <= day) {
-            startIntervention(nextToStart);
-            activeInterventions.add(inactiveInterventions.poll());
-            nextToStart = inactiveInterventions.peek();
-        }
     }
 
     private void startIntervention(InterventionParam intervention) {

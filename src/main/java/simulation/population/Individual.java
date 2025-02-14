@@ -23,7 +23,7 @@ import simulation.environment.Node;
 
 public class Individual {
 
-    private final double speed = 0.00001;
+    private final double SPEED = 0.00001;
 
     private Environment environment;
     private SimulationOutput output;
@@ -118,11 +118,11 @@ public class Individual {
                     goToHome();
                 }
             }
-        // Isolate individual if needed
+            // Isolate individual if needed
         } else if (activity != Activity.ISOLATION && health.isSelfIsolating()) {
             activity = Activity.ISOLATION;
             goToHome();
-        // Otherwise follow normal schedule
+            // Otherwise follow normal schedule
         } else {
             if (activity == Activity.HOPSITALISATION) {
                 hospital.dischargePatient(output);
@@ -192,9 +192,8 @@ public class Individual {
 
     private boolean goToHospital() {
         Hospital hospital = environment.getRandomHospital(location.getComponentID());
-        if (hospital != null && !hospital.isFull()) {
+        if (hospital != null && hospital.admitPatient(output)) {
             this.hospital = hospital;
-            hospital.admitPatient(output);
             route = findRoute(location, hospital);
             routeIndex = 0;
             return true;
@@ -203,7 +202,7 @@ public class Individual {
     }
 
     private void move() {
-        float deltaTime = Simulation.timeStep;
+        float deltaTime = Simulation.TIME_STEP;
         if (route == null)
             return;
         do {
@@ -213,7 +212,7 @@ public class Individual {
             }
             Node next = route.get(routeIndex + 1);
             double distance = position.distance(next.getCentre());
-            double timeToNext = distance / speed;
+            double timeToNext = distance / SPEED;
             if (timeToNext < deltaTime) {
                 deltaTime -= timeToNext;
                 routeIndex++;

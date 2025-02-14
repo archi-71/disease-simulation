@@ -18,13 +18,14 @@ public class LineGraph extends LineChart<Number, Number> {
 
     public LineGraph(String title, String yAxisLabel, int population, int duration, boolean showLegend) {
         super(new NumberAxis(), new NumberAxis());
+        setPrefHeight(1000);
 
         NumberAxis xAxis = (NumberAxis) getXAxis();
         xAxis.setAutoRanging(false);
         xAxis.setLabel("Time (days)");
         xAxis.setLowerBound(0);
         xAxis.setUpperBound(duration);
-        xAxis.setTickUnit(Simulation.dayLength);
+        xAxis.setTickUnit(Simulation.DAY_LENGTH);
         xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis) {
             @Override
             public String toString(Number object) {

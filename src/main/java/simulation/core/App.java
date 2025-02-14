@@ -1,6 +1,7 @@
 package simulation.core;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.stage.Stage;
 import simulation.ui.Layout;
 
@@ -11,7 +12,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) {
-        stage.setTitle("A Multi-Agent Simulation for Disease Spread");
+        stage.setTitle("A Multi-Agent Simulation of Disease Spread");
         stage.setMinWidth(minWidth);
         stage.setMinHeight(minHeight);
 
@@ -24,6 +25,8 @@ public class App extends Application {
             if (simulation.getState() == SimulationState.PLAYING) {
                 simulation.pause();
             }
+            Platform.exit();
+            System.exit(0);
         });
     }
 

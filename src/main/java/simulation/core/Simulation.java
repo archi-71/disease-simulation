@@ -12,8 +12,9 @@ import simulation.disease.Disease;
 
 public class Simulation {
 
-    public static final int timeStep = 600;
-    public static final int dayLength = 86400;
+    public static final int TIME_STEP = 600;
+    public static final int DAY_LENGTH = 86400;
+    public final int THREAD_NUM = Runtime.getRuntime().availableProcessors();
 
     private SimulationParams parameters;
     private SimulationOutput output;
@@ -24,12 +25,21 @@ public class Simulation {
     private Interventions interventions;
 
     private SimulationState state;
+    private int run;
     private int day;
     private int time;
-    private ScheduledExecutorService scheduler;
     private int speed = 1;
-
+    private ScheduledExecutorService scheduler;
     private Runnable stateChangeCallback;
+
+    public Simulation() {
+        environment = new Environment();
+        population = new Population();
+        disease = new Disease();
+        interventions = new Interventions();
+        output = new SimulationOutput();
+        changeState(SimulationState.UNINITIALISED);
+    }
 
     public SimulationParams getParameters() {
         return parameters;
@@ -59,6 +69,10 @@ public class Simulation {
         return state;
     }
 
+    public int getRun() {
+        return run;
+    }
+
     public int getDay() {
         return day;
     }
@@ -75,24 +89,56 @@ public class Simulation {
         stateChangeCallback = callback;
     }
 
-    public Simulation() {
-        changeState(SimulationState.UNINITIALISED);
-    }
-
-    public void initialise(SimulationParams params) {
+    public boolean initialise(SimulationParams params) throws InitialisationException {
         if (state == SimulationState.PLAYING) {
             stopScheduler();
         }
         changeState(SimulationState.UNINITIALISED);
         parameters = new SimulationParams(params);
-        environment = new Environment(parameters.getEnvironmentParams());
-        interventions = new Interventions(parameters.getInterventionParams(), environment);
-        output = new SimulationOutput(interventions);
-        population = new Population(parameters.getPopulationParams(), environment, output);
-        disease = new Disease(parameters.getDiseaseParams(), population, interventions, output);
-        day = time = 0;
-        scheduler = Executors.newScheduledThreadPool(1);
-        changeState(SimulationState.INITIALISED);
+
+        if (parameters.getEnvironmentParams().isDirty()) {
+            try {
+                environment.initialise(parameters.getEnvironmentParams());
+            } catch (InitialisationException e) {
+                throw new InitialisationException("Environment initialisation failed: " + e.getMessage());
+            }
+        }
+
+        if (parameters.getInterventionParams().isDirty()
+                || parameters.getEnvironmentParams().isDirty()) {
+            try {
+                interventions.initialise(parameters.getInterventionParams(), environment);
+            } catch (InitialisationException e) {
+                throw new InitialisationException("Intervention initialisation failed: " + e.getMessage());
+            }
+        }
+
+        if (parameters.getRuns().isDirty() || parameters.getInterventionParams().isDirty()) {
+            output.initialise(parameters.getRuns().getValue(), interventions);
+        }
+
+        if (parameters.getPopulationParams().isDirty()
+                || parameters.getEnvironmentParams().isDirty()) {
+            try {
+                population.initialise(parameters.getPopulationParams(), environment, output);
+            } catch (InitialisationException e) {
+                throw new InitialisationException("Population initialisation failed: " + e.getMessage());
+            }
+        }
+
+        if (parameters.getDiseaseParams().isDirty()
+                || parameters.getPopulationParams().isDirty()
+                || parameters.getEnvironmentParams().isDirty()) {
+            try {
+                disease.initialise(parameters.getDiseaseParams(), population, interventions, output);
+            } catch (InitialisationException e) {
+                throw new InitialisationException("Disease initialisation failed: " + e.getMessage());
+            }
+        }
+
+        scheduler = Executors.newScheduledThreadPool(THREAD_NUM);
+        reset();
+        return true;
     }
 
     public void play() {
@@ -102,15 +148,21 @@ public class Simulation {
 
     public void pause() {
         changeState(SimulationState.PAUSED);
-        stopScheduler();
+        pauseScheduler();
     }
 
     public void reset() {
+        run = 0;
+        output.reset();
+        resetRun();
+    }
+
+    public void resetRun() {
         if (state == SimulationState.PLAYING) {
             stopScheduler();
         }
-        changeState(SimulationState.UNINITIALISED);
-        output.reset();
+        changeState(SimulationState.INITIALISED);
+        output.resetRun();
         population.reset();
         disease.reset();
         interventions.reset();
@@ -121,7 +173,7 @@ public class Simulation {
     public void setSpeed(int speed) {
         this.speed = speed;
         if (state == SimulationState.PLAYING) {
-            stopScheduler();
+            pauseScheduler();
             startScheduler();
         }
     }
@@ -136,20 +188,25 @@ public class Simulation {
     }
 
     private void step() {
-        population.step(time);
-        disease.step(time);
-        output.step(time, day);
-
-        time += timeStep;
-        if (time >= dayLength) {
-            time -= dayLength;
+        output.step(time, day, run);
+        time += TIME_STEP;
+        population.step(scheduler, time);
+        disease.step(scheduler, time);
+        if (time >= DAY_LENGTH) {
+            time -= DAY_LENGTH;
             day++;
             interventions.step(day);
-            if (day >= parameters.getSimulationDuration().getValue()) {
-                output.step(time, day);
-                time = 0;
-                changeState(SimulationState.FINISHED);
-                stopScheduler();
+            if (day >= parameters.getDuration().getValue()) {
+                output.step(time, day, run);
+                run++;
+                if (run >= parameters.getRuns().getValue()) {
+                    output.averageRuns();
+                    changeState(SimulationState.FINISHED);
+                    stopScheduler();
+                } else {
+                    resetRun();
+                    play();
+                }
             }
         }
     }
@@ -162,8 +219,20 @@ public class Simulation {
         }, 0, 1000000000 / speed, TimeUnit.NANOSECONDS);
     }
 
-    private void stopScheduler() {
+    private void pauseScheduler() {
         scheduler.shutdown();
-        scheduler = Executors.newScheduledThreadPool(1);
+        try {
+            if (!scheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                scheduler.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
+        }
+        scheduler = Executors.newScheduledThreadPool(THREAD_NUM);
+    }
+
+    private void stopScheduler() {
+        scheduler.shutdownNow();
+        scheduler = Executors.newScheduledThreadPool(THREAD_NUM);
     }
 }

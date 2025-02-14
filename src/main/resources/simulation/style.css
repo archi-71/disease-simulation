@@ -24,3 +24,58 @@
 .default-color5.chart-series-area-fill { -fx-fill: #B73A3AAA; }
 .default-color6.chart-series-area-fill { -fx-fill: #424242AA; }
 .default-color7.chart-series-area-fill { -fx-fill: #81C784AA; }
+
+.root {
+    -fx-font-family: "Verdana";
+}
+
+VBox {
+    -fx-spacing: 5px;
+}
+
+.text-field {
+    -fx-max-width: 100px;
+}
+
+.button {
+    -fx-padding: 15px;
+    -fx-border-insets: 5px;
+    -fx-background-insets: 5px;
+    -fx-background-radius: 5px;
+}
+
+.titled-pane > .title {
+    -fx-font-size: 13px;
+}
+
+.big-titled-pane > .title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.big-text {
+    -fx-font-size: 20px;
+    -fx-padding: 20px;
+}
+
+.bold {
+    -fx-font-weight: bold;
+}
+
+.italics {
+    -fx-font-style: italic;
+}
+
+.add-intervention {
+    -fx-padding: 10px;
+}
+
+.overlay-background {
+    -fx-background-color: #00000080;
+}
+
+.overlay-box {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 10px;
+    -fx-alignment: center;
+}

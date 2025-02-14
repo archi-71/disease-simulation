@@ -42,11 +42,11 @@ public class Building extends Node {
         occupants = new HashSet<>();
     }
 
-    public void addOccupant(Individual individual) {
+    public synchronized void addOccupant(Individual individual) {
         occupants.add(individual);
     }
 
-    public void removeOccupant(Individual individual) {
+    public synchronized void removeOccupant(Individual individual) {
         occupants.remove(individual);
     }
 

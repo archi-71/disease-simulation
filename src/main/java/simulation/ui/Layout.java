@@ -8,22 +8,25 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import simulation.core.InitialisationException;
 import simulation.core.Simulation;
 import simulation.core.SimulationState;
+import simulation.params.SimulationParams;
 
 public class Layout {
 
-    private final double controlsHeight = 50;
-    private final double minSplit = 0.1;
+    private final double OVERLAY_SIZE = 0.25;
+    private final double MIN_SPLIT = 0.1;
 
     private boolean isResizing = false;
     private double verticalSplit = 0.3;
@@ -33,6 +36,7 @@ public class Layout {
     private Stage stage;
     private Scene scene;
 
+    private Overlay overlay;
     private ParameterInputs inputParameters;
     private Controls controls;
     private Map map;
@@ -44,11 +48,27 @@ public class Layout {
         this.stage = stage;
         this.simulation = simulation;
         createScene();
+        scene.getRoot().requestFocus();
 
         simulation.setStateChangeCallback(() -> {
+            // Always show visualisation at the start and end of the simulation
+            if (simulation.getState() == SimulationState.INITIALISED && simulation.getRun() == 0
+                    || simulation.getState() == SimulationState.FINISHED) {
+                Platform.runLater(() -> {
+                    map.setVisualisation(true);
+                    data.setVisualisation(true);
+                });
+            }
+
+            // Reset data when simulation is initialised
             if (simulation.getState() == SimulationState.INITIALISED) {
-                data.reset();
-            } else if (simulation.getState() == SimulationState.PLAYING) {
+                Platform.runLater(() -> {
+                    data.reset();
+                });
+            }
+
+            // Begin update service if simulation is played, otherwise cancel it
+            if (simulation.getState() == SimulationState.PLAYING) {
                 service = new ScheduledService<Void>() {
                     @Override
                     protected Task<Void> createTask() {
@@ -62,11 +82,30 @@ public class Layout {
                     }
                 };
                 service.setPeriod(javafx.util.Duration.ZERO);
-                service.start();
+                Platform.runLater(() -> {
+                    if (service.getState() == ScheduledService.State.READY) {
+                        service.start();
+                    }
+                });
             } else if (service != null) {
-                service.cancel();
+                Platform.runLater(() -> {
+                    if (service.isRunning()) {
+                        service.cancel();
+                    }
+                });
             }
+
+            // Update UI on state change
             updateUI();
+
+            // Revert visualisation option to user preference
+            map.setVisualisation(controls.getVisualisationToggle().isSelected());
+            data.setVisualisation(controls.getVisualisationToggle().isSelected());
+        });
+
+        controls.getVisualisationToggle().selectedProperty().addListener((obs, wasVisualising, isVisualising) -> {
+            map.setVisualisation(isVisualising);
+            data.setVisualisation(isVisualising);
         });
     }
 
@@ -88,41 +127,75 @@ public class Layout {
         double width = screen.getWidth();
         double height = screen.getHeight();
 
+        // Create overlay for displaying loading status and alerts
+        overlay = new Overlay(width * OVERLAY_SIZE, height * OVERLAY_SIZE);
+
         // Create parameters section
         VBox parametersSection = new VBox();
-        parametersSection.setMinWidth(width * minSplit);
-
-        Label parametersTitle = new Label("Parameters");
-        parametersTitle.setStyle("-fx-font-size: 16px;");
+        parametersSection.setMinWidth(width * MIN_SPLIT);
 
         inputParameters = new ParameterInputs(stage);
         ScrollPane parameters = new ScrollPane(inputParameters);
+        parameters.setFitToWidth(true);
         VBox.setVgrow(parameters, Priority.ALWAYS);
 
         Button initialiseSimButton = new Button("Initialise Simulation");
+        initialiseSimButton.setMinWidth(Region.USE_PREF_SIZE);
         initialiseSimButton.setOnAction(event -> {
-            simulation.initialise(inputParameters.getParameters());
-            map.initialise();
+            SimulationParams params = inputParameters.getParameters();
+            if (params.isDirty()) {
+                Task<Void> task = new Task<Void>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        Platform.runLater(() -> {
+                            overlay.showLoading("Initialising Simulation...");
+                        });
+                        try {
+                            simulation.initialise(params);
+                            if (params.getEnvironmentParams().getBuildingsFile().isDirty()
+                                    || params.getEnvironmentParams().getRoadsFile().isDirty()) {
+                                map.initialise();
+                            }
+                            params.clean();
+                            Platform.runLater(() -> {
+                                map.draw();
+                                overlay.hide();
+                            });
+                        } catch (InitialisationException e) {
+                            Platform.runLater(() -> {
+                                overlay.showError(e.getMessage());
+                            });
+                        }
+                        return null;
+                    }
+                };
+                Thread thread = new Thread(task);
+                thread.setDaemon(true);
+                thread.start();
+                thread.setUncaughtExceptionHandler((t, e) -> {
+                    System.out.println("Uncaught exception: " + e.getMessage());
+                    Platform.runLater(() -> {
+                        overlay.showError(e.getMessage());
+                    });
+                });
+            }
         });
         HBox initialiseSim = new HBox(initialiseSimButton);
         initialiseSim.setAlignment(Pos.CENTER);
 
-        parametersSection.getChildren().addAll(parametersTitle, parameters, initialiseSim);
+        parametersSection.getChildren().addAll(parameters, initialiseSim);
 
         // Create controls section
         controls = new Controls(simulation);
 
-        Label controlsTitle = new Label("Controls");
-        controlsTitle.setStyle("-fx-font-size: 16px;");
-
         VBox controlsSection = new VBox();
-        controlsSection.setMinHeight(controlsHeight);
-        controlsSection.getChildren().addAll(controlsTitle, controls);
+        controlsSection.setAlignment(Pos.CENTER);
+        controlsSection.getChildren().add(controls);
 
         // Create map section
         map = new Map(simulation);
         Pane mapSection = new Pane(map);
-        mapSection.setMinHeight(height * minSplit);
+        mapSection.setMinHeight(height * MIN_SPLIT);
         map.prefWidthProperty().bind(mapSection.widthProperty());
         map.prefHeightProperty().bind(mapSection.heightProperty());
 
@@ -130,7 +203,7 @@ public class Layout {
         data = new Data(stage, simulation);
 
         VBox dataSection = new VBox();
-        dataSection.setMinHeight(height * minSplit);
+        dataSection.setMinHeight(height * MIN_SPLIT);
 
         dataSection.getChildren().add(data);
 
@@ -147,7 +220,10 @@ public class Layout {
         SplitPane layout = new SplitPane(parametersSection, rightSection);
         layout.setDividerPositions(verticalSplit);
 
-        scene = new Scene(layout, width, height);
+        // Combine layout and overlay into the root
+        StackPane root = new StackPane(layout, overlay);
+
+        scene = new Scene(root, width, height);
 
         // Update divider positions when changed by the user
         layout.getDividers().get(0).positionProperty().addListener((obs, oldPos, newPos) -> {
@@ -165,15 +241,15 @@ public class Layout {
 
         // Check for screen resize to adjust minimum dimensions and divider positions
         layout.widthProperty().addListener((obs, oldVal, newVal) -> {
-            parametersSection.setMinWidth(scene.getWidth() * minSplit);
+            parametersSection.setMinWidth(scene.getWidth() * MIN_SPLIT);
             layout.setDividerPositions(verticalSplit);
             map.resizeMap();
         });
         outputSection.heightProperty().addListener((obs, oldVal, newVal) -> {
-            mapSection.setMinWidth(scene.getWidth() * minSplit);
-            mapSection.setMinHeight(scene.getHeight() * minSplit);
-            dataSection.setMinWidth(scene.getWidth() * minSplit);
-            dataSection.setMinHeight(scene.getHeight() * minSplit);
+            mapSection.setMinWidth(scene.getWidth() * MIN_SPLIT);
+            mapSection.setMinHeight(scene.getHeight() * MIN_SPLIT);
+            dataSection.setMinWidth(scene.getWidth() * MIN_SPLIT);
+            dataSection.setMinHeight(scene.getHeight() * MIN_SPLIT);
             outputSection.setDividerPositions(horizontalSplit);
             map.resizeMap();
         });

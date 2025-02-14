@@ -7,7 +7,7 @@ import simulation.core.SimulationOutput;
 public class Hospital extends Building {
 
     private int capacity;
-    private int occupancy;
+    private volatile int occupancy;
 
     public Hospital(Geometry geometry, String id) {
         super(geometry, id, BuildingType.HOSPITAL);
@@ -19,18 +19,22 @@ public class Hospital extends Building {
         this.capacity = capacity;
     }
 
-    public void admitPatient(SimulationOutput output) {
-        occupancy++;
-        output.countHospitalAdmission();
+    public synchronized boolean admitPatient(SimulationOutput output) {
+        if (occupancy < capacity) {
+            occupancy++;
+            output.countHospitalAdmission();
+            return true;
+        }
+        return false;
     }
 
-    public void dischargePatient(SimulationOutput output) {
-        occupancy--;
-        output.countHospitalDischarge();
-    }
-
-    public boolean isFull() {
-        return occupancy >= capacity;
+    public synchronized boolean dischargePatient(SimulationOutput output) {
+        if (occupancy > 0) {
+            occupancy--;
+            output.countHospitalDischarge();
+            return true;
+        }
+        return false;
     }
 
     public double getArea() {

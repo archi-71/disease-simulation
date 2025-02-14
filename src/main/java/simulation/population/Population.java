@@ -2,7 +2,10 @@ package simulation.population;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
 
+import simulation.core.InitialisationException;
 import simulation.core.SimulationOutput;
 import simulation.environment.Building;
 import simulation.environment.Environment;
@@ -13,16 +16,14 @@ public class Population {
     private PopulationParams parameters;
     private ArrayList<Individual> individuals;
 
-    public Population(PopulationParams params, Environment environment, SimulationOutput output) {
-        parameters = params;
-        populateEnvironment(environment, output);
-    }
-
     public ArrayList<Individual> getIndividuals() {
         return individuals;
     }
 
-    private void populateEnvironment(Environment environment, SimulationOutput output) {
+    public void initialise(PopulationParams params, Environment environment, SimulationOutput output)
+            throws InitialisationException {
+        parameters = params;
+
         List<Building> homes = environment.getHomes();
 
         // Generate household sizes
@@ -35,6 +36,11 @@ public class Population {
             }
             households.add(householdSize);
             population += householdSize;
+        }
+
+        if (population < parameters.getPopulationSize().getValue()) {
+            throw new InitialisationException(
+                    "There are not enough residential buildings to accommodate the population");
         }
 
         // Populate households
@@ -63,9 +69,18 @@ public class Population {
         }
     }
 
-    public void step(int dayTime) {
+    public void step(ScheduledExecutorService scheduler, int dayTime) {
+        List<Callable<Void>> tasks = new ArrayList<>();
         for (Individual individual : individuals) {
-            individual.step(dayTime);
+            tasks.add(() -> {
+                individual.step(dayTime);
+                return null;
+            });
+        }
+        try {
+            scheduler.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

@@ -19,6 +19,7 @@ import org.locationtech.jts.index.strtree.ItemBoundable;
 import org.locationtech.jts.index.strtree.ItemDistance;
 import org.locationtech.jts.index.strtree.STRtree;
 
+import simulation.core.InitialisationException;
 import simulation.params.EnvironmentParams;
 
 public class Environment {
@@ -33,6 +34,10 @@ public class Environment {
     private HashMap<Integer, List<Building>> workplaceMap;
     private HashMap<Integer, List<Building>> amenityMap;
     private HashMap<Integer, List<Building>> nonEssentialMap;
+
+    public EnvironmentParams getParameters() {
+        return parameters;
+    }
 
     public GISLoader getGISLoader() {
         return gisLoader;
@@ -122,20 +127,22 @@ public class Environment {
         return amenities.get((int) (Math.random() * amenities.size()));
     }
 
-    public Environment(EnvironmentParams params) {
-        parameters = params;
+    public void initialise(EnvironmentParams params) throws InitialisationException {
+        this.parameters = params;
 
-        // Load GIS data
-        gisLoader = new GISLoader();
-        if (!gisLoader.loadBuildings(parameters.getBuildingsFile().getFile())) {
-            return;
-        }
-        if (!gisLoader.loadRoads(parameters.getRoadsFile().getFile())) {
-            return;
-        }
+        if (parameters.getBuildingsFile().isDirty() || parameters.getRoadsFile().isDirty()) {
+            // Load GIS data
+            gisLoader = new GISLoader();
+            if (!gisLoader.loadBuildings(parameters.getBuildingsFile().getFile())) {
+                throw new InitialisationException("Buildings shapefile could not be loaded");
+            }
+            if (!gisLoader.loadRoads(parameters.getRoadsFile().getFile())) {
+                throw new InitialisationException("Roads shapefile could not be loaded");
+            }
 
-        // Create graph of buildings connected by the road network
-        buildGraph();
+            // Create graph of buildings connected by the road network
+            buildGraph();
+        }
 
         // Assign hospital capacities, weighted by their area
         double totalArea = 0;

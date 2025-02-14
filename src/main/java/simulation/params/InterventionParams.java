@@ -15,17 +15,38 @@ import simulation.interventions.InterventionType;
 public class InterventionParams implements IParam {
 
     private List<InterventionParam> interventions = new ArrayList<>();
+    private boolean dirty;
+
+    public InterventionParams() {
+        dirty = true;
+    }
+
+    public InterventionParams(InterventionParams params) {
+        interventions.clear();
+        for (InterventionParam intervention : params.interventions) {
+            interventions.add(new InterventionParam(intervention));
+        }
+        dirty = params.dirty;
+    }
 
     public List<InterventionParam> getInterventions() {
         return interventions;
     }
 
-    public InterventionParams() {
-
+    public boolean isDirty() {
+        for (InterventionParam intervention : interventions) {
+            if (intervention.isDirty()) {
+                dirty = true;
+            }
+        }
+        return dirty;
     }
 
-    public InterventionParams(InterventionParams params) {
-        interventions = params.getInterventions();
+    public void clean() {
+        dirty = false;
+        for (InterventionParam intervention : interventions) {
+            intervention.clean();
+        }
     }
 
     public Region getInputUI() {
@@ -38,22 +59,33 @@ public class InterventionParams implements IParam {
         interventionChoice.getItems().addAll(InterventionType.values());
         interventionChoice.setValue(InterventionType.values()[0]);
         Button addButton = new Button("Add Intervention");
+        addButton.setMinWidth(Region.USE_PREF_SIZE);
         addButton.setOnAction(addEvent -> {
             InterventionParam intervention = new InterventionParam(interventionChoice.getValue());
             interventions.add(intervention);
+            dirty = true;
             Button removeButton = new Button("Remove");
+            removeButton.setMinWidth(Region.USE_PREF_SIZE);
+            removeButton.setAlignment(Pos.CENTER);
             removeButton.setOnAction(removeEvent -> {
                 int index = interventions.indexOf(intervention);
                 interventions.remove(index);
                 interventionInputs.getChildren().remove(index);
+                dirty = true;
             });
-            interventionInputs.getChildren().add(new VBox(removeButton, intervention.getInputUI()));
+            TitledPane titledPane = (TitledPane) intervention.getInputUI();
+            VBox interventionBox = new VBox(titledPane.getContent(), removeButton);
+            interventionBox.setAlignment(Pos.CENTER);
+            titledPane.setContent(interventionBox);
+            interventionInputs.getChildren().add(titledPane);
         });
 
         HBox addInterventionInput = new HBox(interventionChoice, addButton);
+        addInterventionInput.getStyleClass().add("add-intervention");
         addInterventionInput.setAlignment(Pos.CENTER);
 
         TitledPane titledPane = new TitledPane("Interventions", new VBox(interventionInputs, addInterventionInput));
+        titledPane.getStyleClass().add("big-titled-pane");
         return titledPane;
     }
 }

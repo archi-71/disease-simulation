@@ -29,12 +29,28 @@ public class MapParam<K, V extends IParam> implements IParam {
         map.put(key, value);
     }
 
+    public boolean isDirty() {
+        for (V value : map.values()) {
+            if (value.isDirty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void clean() {
+        for (V value : map.values()) {
+            value.clean();
+        }
+    }
+
     public Region getInputUI() {
         VBox inputs = new VBox();
         for (Map.Entry<K, V> entry : map.entrySet()) {
             inputs.getChildren().add(entry.getValue().getInputUI());
         }
         TitledPane titledPane = new TitledPane(name, inputs);
+        titledPane.setExpanded(false);
         return titledPane;
     }
 }

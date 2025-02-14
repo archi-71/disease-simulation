@@ -1,15 +1,25 @@
 package simulation.ui;
 
 import javafx.scene.paint.Color;
+
 import java.awt.Rectangle;
 
+import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Label;
+import javafx.scene.control.TitledPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import simulation.core.Simulation;
+import simulation.disease.HealthState;
 import simulation.environment.BuildingType;
 import simulation.environment.GISLoader;
 import simulation.population.Individual;
@@ -29,52 +39,67 @@ import org.geotools.map.MapContent;
 import org.geotools.renderer.lite.StreamingRenderer;
 import org.geotools.styling.SLD;
 
-public class Map extends Pane {
+public class Map extends StackPane {
 
-    private final int resolution = 2048;
-    private final float roadStrokeWidth = 2f;
-    private final float buildingStrokeWidth = 1f;
-    private final float individualSize = 8f;
-    private final double zoomSpeed = 0.0008;
+    private final int RESOLUTION = 2048;
+    private final float ROAD_STROKE_WIDTH = 2f;
+    private final float BUILDING_STROKE_WIDTH = 1f;
+    private final float INDIVIDUAL_SIZE = 8f;
+    private final double ZOOM_SPEED = 0.0008;
+    private final double MAX_ZOOM = 2;
 
     private Simulation simulation;
 
+    private TitledPane legend;
     private Canvas environmentCanvas;
     private Canvas populationCanvas;
     private MapContent mapContent;
+
+    private boolean visualisation;
 
     private double width;
     private double height;
     private double centreX;
     private double centreY;
-
     private double baseDragX;
     private double baseDragY;
     private double dragStartX;
     private double dragStartY;
-    private double focusX = 0.5;
-    private double focusY = 0.5;
-    private double scaleFactor = 1.0;
-    private double maxZoom = 2;
+    private double focusX;
+    private double focusY;
+    private double scaleFactor;
     private double minZoom;
 
     public Map(Simulation simulation) {
         this.simulation = simulation;
-        environmentCanvas = new Canvas(resolution, resolution);
-        populationCanvas = new Canvas(resolution, resolution);
-        getChildren().addAll(environmentCanvas, populationCanvas);
+
+        legend = new TitledPane();
+        legend.setVisible(false);
+        environmentCanvas = new Canvas(RESOLUTION, RESOLUTION);
+        populationCanvas = new Canvas(RESOLUTION, RESOLUTION);
+        visualisation = true;
+
+        getChildren().addAll(new Pane(environmentCanvas, populationCanvas), legend);
     }
 
     public void initialise() {
         initialiseMap();
         resetMap();
         initialiseControls();
+        initialiseLegend();
+    }
+
+    public void draw() {
         drawEnvironment();
         drawPopulation();
     }
 
     public void update() {
         drawPopulation();
+    }
+
+    public void setVisualisation(boolean visualisation) {
+        this.visualisation = visualisation;
     }
 
     private void initialiseMap() {
@@ -92,7 +117,7 @@ public class Map extends Pane {
             mapContent.addLayer(layer);
         }
 
-        Style roadStyle = SLD.createLineStyle(java.awt.Color.GRAY, roadStrokeWidth);
+        Style roadStyle = SLD.createLineStyle(java.awt.Color.GRAY, ROAD_STROKE_WIDTH);
         FeatureLayer roadLayer = new FeatureLayer(gisLoader.getRoadFeatures(), roadStyle);
         mapContent.addLayer(roadLayer);
 
@@ -112,7 +137,7 @@ public class Map extends Pane {
 
         Stroke stroke = styleFactory.createStroke(
                 filterFactory.literal(outlineColour),
-                filterFactory.literal(buildingStrokeWidth));
+                filterFactory.literal(BUILDING_STROKE_WIDTH));
 
         PolygonSymbolizer polygonSymbolizer = styleFactory.createPolygonSymbolizer(stroke, fill, null);
 
@@ -128,34 +153,40 @@ public class Map extends Pane {
     }
 
     private void drawEnvironment() {
-        GraphicsContext graphicsContext = environmentCanvas.getGraphicsContext2D();
-        graphicsContext.clearRect(0, 0, resolution, resolution);
+        GraphicsContext gc = environmentCanvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, RESOLUTION, RESOLUTION);
         Rectangle mapRect = mapContent.getViewport().getScreenArea();
-        mapRect.setSize(resolution, resolution);
+        mapRect.setSize(RESOLUTION, RESOLUTION);
         StreamingRenderer draw = new StreamingRenderer();
         draw.setMapContent(mapContent);
-        FXGraphics2D graphics = new FXGraphics2D(graphicsContext);
+        FXGraphics2D graphics = new FXGraphics2D(gc);
         draw.paint(graphics, mapRect, mapContent.getViewport().getBounds());
     }
 
     private void drawPopulation() {
-        float size = individualSize / (float) scaleFactor;
-        GraphicsContext graphicsContext = populationCanvas.getGraphicsContext2D();
-        graphicsContext.clearRect(0, 0, resolution, resolution);
+        if (!visualisation) {
+            return;
+        }
+        float size = INDIVIDUAL_SIZE / (float) scaleFactor;
+        GraphicsContext gc = populationCanvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, RESOLUTION, RESOLUTION);
         for (Individual individual : simulation.getPopulation().getIndividuals()) {
-            double x = resolution / 2 + resolution * (individual.getPosition().getX() - centreX) / width;
-            double y = resolution / 2 - resolution * (individual.getPosition().getY() - centreY) / height;
-            graphicsContext.setFill(Color.web(individual.getHealth().getState().getColour()));
-            graphicsContext.fillOval(x - size / 2, y - size / 2, size, size);
-            graphicsContext.setStroke(Color.BLACK);
-            graphicsContext.setLineWidth(size / 10);
-            graphicsContext.strokeOval(x - size / 2, y - size / 2, size, size);
+            if (individual.getHealth() == null) {
+                continue;
+            }
+            double x = RESOLUTION / 2 + RESOLUTION * (individual.getPosition().getX() - centreX) / width;
+            double y = RESOLUTION / 2 - RESOLUTION * (individual.getPosition().getY() - centreY) / height;
+            gc.setFill(Color.web(individual.getHealth().getState().getColour()));
+            gc.fillOval(x - size / 2, y - size / 2, size, size);
+            gc.setStroke(Color.BLACK);
+            gc.setLineWidth(size / 10);
+            gc.strokeOval(x - size / 2, y - size / 2, size, size);
         }
     }
 
     private void resetMap() {
         // Reset scale
-        scaleFactor = Math.max(getWidth(), getHeight()) / resolution;
+        scaleFactor = Math.max(getWidth(), getHeight()) / RESOLUTION;
         environmentCanvas.setScaleX(scaleFactor);
         environmentCanvas.setScaleY(scaleFactor);
         populationCanvas.setScaleX(scaleFactor);
@@ -169,12 +200,12 @@ public class Map extends Pane {
 
     // Update map to keep focus centred when resizing
     public void resizeMap() {
-        environmentCanvas.setTranslateX(getWidth() / 2 - focusX * resolution);
-        environmentCanvas.setTranslateY(getHeight() / 2 - focusY * resolution);
-        populationCanvas.setTranslateX(getWidth() / 2 - focusX * resolution);
-        populationCanvas.setTranslateY(getHeight() / 2 - focusY * resolution);
+        environmentCanvas.setTranslateX(getWidth() / 2 - focusX * RESOLUTION);
+        environmentCanvas.setTranslateY(getHeight() / 2 - focusY * RESOLUTION);
+        populationCanvas.setTranslateX(getWidth() / 2 - focusX * RESOLUTION);
+        populationCanvas.setTranslateY(getHeight() / 2 - focusY * RESOLUTION);
 
-        minZoom = Math.min(getWidth(), getHeight()) / resolution;
+        minZoom = Math.min(getWidth(), getHeight()) / RESOLUTION;
         scaleFactor = Math.max(minZoom, scaleFactor);
 
         environmentCanvas.setScaleX(scaleFactor);
@@ -207,8 +238,8 @@ public class Map extends Pane {
                 environmentCanvas.setTranslateY(dragStartY + difY);
                 populationCanvas.setTranslateX(dragStartX + difX);
                 populationCanvas.setTranslateY(dragStartY + difY);
-                focusX = (getWidth() / 2 - environmentCanvas.getTranslateX()) / resolution;
-                focusY = (getHeight() / 2 - environmentCanvas.getTranslateY()) / resolution;
+                focusX = (getWidth() / 2 - environmentCanvas.getTranslateX()) / RESOLUTION;
+                focusY = (getHeight() / 2 - environmentCanvas.getTranslateY()) / RESOLUTION;
             }
         });
 
@@ -218,6 +249,7 @@ public class Map extends Pane {
             public void handle(MouseEvent event) {
                 if (event.getClickCount() > 1) {
                     resetMap();
+                    drawPopulation();
                 }
                 event.consume();
             }
@@ -231,15 +263,15 @@ public class Map extends Pane {
                 if (deltaY != 0) {
                     // Get old mouse position
                     double oldMouseX = (event.getX() / scaleFactor
-                            - (environmentCanvas.getTranslateX() + resolution * (1 - scaleFactor) / 2)
+                            - (environmentCanvas.getTranslateX() + RESOLUTION * (1 - scaleFactor) / 2)
                                     / scaleFactor);
                     double oldMouseY = (event.getY() / scaleFactor
-                            - (environmentCanvas.getTranslateY() + resolution * (1 - scaleFactor) / 2)
+                            - (environmentCanvas.getTranslateY() + RESOLUTION * (1 - scaleFactor) / 2)
                                     / scaleFactor);
 
                     // Scale map
-                    scaleFactor = Math.max(minZoom, Math.min(maxZoom, scaleFactor * (1 +
-                            zoomSpeed * deltaY)));
+                    scaleFactor = Math.max(minZoom, Math.min(MAX_ZOOM, scaleFactor * (1 +
+                            ZOOM_SPEED * deltaY)));
                     environmentCanvas.setScaleX(scaleFactor);
                     environmentCanvas.setScaleY(scaleFactor);
                     populationCanvas.setScaleX(scaleFactor);
@@ -247,10 +279,10 @@ public class Map extends Pane {
 
                     // Get new mouse position
                     double newMouseX = (event.getX() / scaleFactor
-                            - (environmentCanvas.getTranslateX() + resolution * (1 - scaleFactor) / 2)
+                            - (environmentCanvas.getTranslateX() + RESOLUTION * (1 - scaleFactor) / 2)
                                     / scaleFactor);
                     double newMouseY = (event.getY() / scaleFactor
-                            - (environmentCanvas.getTranslateY() + resolution * (1 - scaleFactor) / 2)
+                            - (environmentCanvas.getTranslateY() + RESOLUTION * (1 - scaleFactor) / 2)
                                     / scaleFactor);
 
                     // Translate canvas to centre the scaling on the mouse position
@@ -262,14 +294,71 @@ public class Map extends Pane {
                             .setTranslateX(scaleFactor * (newMouseX - oldMouseX) + populationCanvas.getTranslateX());
                     populationCanvas
                             .setTranslateY(scaleFactor * (newMouseY - oldMouseY) + populationCanvas.getTranslateY());
-                    focusX = (getWidth() / 2 - environmentCanvas.getTranslateX()) / resolution;
-                    focusY = (getHeight() / 2 - environmentCanvas.getTranslateY()) / resolution;
+                    focusX = (getWidth() / 2 - environmentCanvas.getTranslateX()) / RESOLUTION;
+                    focusY = (getHeight() / 2 - environmentCanvas.getTranslateY()) / RESOLUTION;
 
                     drawPopulation();
 
                     event.consume();
                 }
             }
+        });
+    }
+
+    private void initialiseLegend() {
+        Platform.runLater(() -> {
+            setAlignment(legend, Pos.TOP_RIGHT);
+            legend.setText("Legend");
+            legend.expandedProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue) {
+                    legend.setMaxWidth(Region.USE_PREF_SIZE);
+                } else {
+                    legend.setMaxWidth(80);
+                }
+            });
+            VBox box = new VBox();
+
+            Label buildingsLabel = new Label("Buildings");
+            buildingsLabel.getStyleClass().add("bold");
+            box.getChildren().add(buildingsLabel);
+            for (BuildingType type : BuildingType.values()) {
+                Label label = new Label(type.getName());
+
+                Canvas symbol = new Canvas(10, 10);
+                GraphicsContext gc = symbol.getGraphicsContext2D();
+                gc.setFill(Color.web(type.getFillColour()));
+                gc.fillRect(0, 0, 10, 10);
+                gc.setStroke(Color.web(type.getOutlineColour()));
+                gc.setLineWidth(2);
+                gc.strokeRect(0, 0, 10, 10);
+
+                HBox key = new HBox(5, symbol, label);
+                key.setAlignment(Pos.CENTER_LEFT);
+                box.getChildren().add(key);
+            }
+
+            Label individualsLabel = new Label("Individuals");
+            individualsLabel.getStyleClass().add("bold");
+            box.getChildren().add(individualsLabel);
+            for (HealthState type : HealthState.values()) {
+                Label label = new Label(type.getName());
+
+                Canvas symbol = new Canvas(12, 12);
+                GraphicsContext gc = symbol.getGraphicsContext2D();
+                gc.setFill(Color.web(type.getColour()));
+                gc.fillOval(1, 1, 10, 10);
+                gc.setStroke(Color.BLACK);
+                gc.setLineWidth(1);
+                gc.strokeOval(1, 1, 10, 10);
+
+                HBox key = new HBox(5, symbol, label);
+                key.setAlignment(Pos.CENTER_LEFT);
+                box.getChildren().add(key);
+            }
+
+            legend.setContent(box);
+            legend.setExpanded(false);
+            legend.setVisible(true);
         });
     }
 }
