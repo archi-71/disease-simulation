@@ -118,11 +118,13 @@ public class Individual {
                     goToHome();
                 }
             }
-            // Isolate individual if needed
-        } else if (activity != Activity.ISOLATION && health.isSelfIsolating()) {
-            activity = Activity.ISOLATION;
-            goToHome();
-            // Otherwise follow normal schedule
+        // Isolate individual if needed
+        } else if (health.isSelfIsolating()) {
+            if (activity != Activity.ISOLATION) {
+                activity = Activity.ISOLATION;
+                goToHome();
+            }
+        // Otherwise follow normal schedule
         } else {
             if (activity == Activity.HOPSITALISATION) {
                 hospital.dischargePatient(output);
