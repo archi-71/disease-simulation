@@ -28,6 +28,7 @@ public class Controls extends HBox {
         this.simulation = simulation;
 
         playPauseButton = new Button("Play");
+        playPauseButton.getStyleClass().add("accent");
         playPauseButton.setMinWidth(Region.USE_PREF_SIZE);
         playPauseButton.setDisable(true);
         playPauseButton.setOnAction(event -> {
@@ -37,9 +38,11 @@ public class Controls extends HBox {
             } else if (simulation.getState() == SimulationState.PLAYING) {
                 simulation.pause();
             }
+            playPauseButton.getParent().requestFocus();
         });
 
         resetButton = new Button("Reset");
+        resetButton.getStyleClass().add("accent");
         resetButton.setMinWidth(Region.USE_PREF_SIZE);
         resetButton.setDisable(true);
         resetButton.setOnAction(event -> {

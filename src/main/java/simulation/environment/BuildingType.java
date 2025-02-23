@@ -12,9 +12,9 @@ public enum BuildingType {
 
     ESSENTIAL_AMENITY("Essential Amenities", "#1976D2", "#0D47A1"),
 
-    ESSENTIAL_WORKPLACE("Essential Workplaces", "#388E3C", "#1B5E20"),
-
     NON_ESSENTIAL_AMENITY("Non-Essential Amenities", "#4FC3F7", "#0288D1"),
+
+    ESSENTIAL_WORKPLACE("Essential Workplaces", "#388E3C", "#1B5E20"),
 
     NON_ESSENTIAL_WORKPLACE("Non-Essential Workplaces", "#8BC34A", "#5A8C2B");
 

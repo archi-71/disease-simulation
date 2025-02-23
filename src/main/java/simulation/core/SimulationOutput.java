@@ -1,6 +1,7 @@
 package simulation.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import simulation.interventions.InterventionType;
@@ -160,7 +161,7 @@ public class SimulationOutput {
     public void step(int time, int day, int run) {
         int timestamp = day * Simulation.DAY_LENGTH + time;
 
-        stateDistributionData.get(run).add(new ArrayList<>(List.of(
+        stateDistributionData.get(run).add(new ArrayList<>(Arrays.asList(
                 timestamp,
                 susceptibleNum,
                 exposedNum,
@@ -172,13 +173,13 @@ public class SimulationOutput {
                 recoveredNum)));
 
         if (timestamp % incidentCasePeriod == 0) {
-            incidentCaseData.get(run).add(new ArrayList<>(List.of(timestamp, incidentCases)));
+            incidentCaseData.get(run).add(new ArrayList<>(Arrays.asList(timestamp, incidentCases)));
             incidentCases = 0;
         }
-        prevalentCaseData.get(run).add(new ArrayList<>(List.of(timestamp, prevalentCases)));
-        cumulativeCaseData.get(run).add(new ArrayList<>(List.of(timestamp, cumulativeCases)));
-        hospitalisationData.get(run).add(new ArrayList<>(List.of(timestamp, hospitalisedNum)));
-        deathData.get(run).add(new ArrayList<>(List.of(timestamp, deceasedNum)));
+        prevalentCaseData.get(run).add(new ArrayList<>(Arrays.asList(timestamp, prevalentCases)));
+        cumulativeCaseData.get(run).add(new ArrayList<>(Arrays.asList(timestamp, cumulativeCases)));
+        hospitalisationData.get(run).add(new ArrayList<>(Arrays.asList(timestamp, hospitalisedNum)));
+        deathData.get(run).add(new ArrayList<>(Arrays.asList(timestamp, deceasedNum)));
 
         List<Integer> vaccinationEntry = new ArrayList<Integer>();
         vaccinationEntry.add(timestamp);

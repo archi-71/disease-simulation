@@ -316,11 +316,11 @@ public class Map extends StackPane {
                     legend.setMaxWidth(80);
                 }
             });
-            VBox box = new VBox();
 
+            VBox buildings = new VBox();
             Label buildingsLabel = new Label("Buildings");
             buildingsLabel.getStyleClass().add("bold");
-            box.getChildren().add(buildingsLabel);
+            buildings.getChildren().add(buildingsLabel);
             for (BuildingType type : BuildingType.values()) {
                 Label label = new Label(type.getName());
 
@@ -334,12 +334,13 @@ public class Map extends StackPane {
 
                 HBox key = new HBox(5, symbol, label);
                 key.setAlignment(Pos.CENTER_LEFT);
-                box.getChildren().add(key);
+                buildings.getChildren().add(key);
             }
 
+            VBox individuals = new VBox();
             Label individualsLabel = new Label("Individuals");
             individualsLabel.getStyleClass().add("bold");
-            box.getChildren().add(individualsLabel);
+            individuals.getChildren().add(individualsLabel);
             for (HealthState type : HealthState.values()) {
                 Label label = new Label(type.getName());
 
@@ -353,10 +354,10 @@ public class Map extends StackPane {
 
                 HBox key = new HBox(5, symbol, label);
                 key.setAlignment(Pos.CENTER_LEFT);
-                box.getChildren().add(key);
+                individuals.getChildren().add(key);
             }
 
-            legend.setContent(box);
+            legend.setContent(new HBox(20, buildings, individuals));
             legend.setExpanded(false);
             legend.setVisible(true);
         });

@@ -29,7 +29,7 @@ public class Layout {
     private final double MIN_SPLIT = 0.1;
 
     private boolean isResizing = false;
-    private double verticalSplit = 0.3;
+    private double verticalSplit = 0.32;
     private double horizontalSplit = 0.5;
 
     private Simulation simulation;
@@ -140,6 +140,7 @@ public class Layout {
         VBox.setVgrow(parameters, Priority.ALWAYS);
 
         Button initialiseSimButton = new Button("Initialise Simulation");
+        initialiseSimButton.getStyleClass().add("accent");
         initialiseSimButton.setMinWidth(Region.USE_PREF_SIZE);
         initialiseSimButton.setOnAction(event -> {
             SimulationParams params = inputParameters.getParameters();

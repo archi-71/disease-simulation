@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javafx.geometry.Pos;
@@ -161,7 +162,8 @@ public class Data extends VBox {
         stateDistributionExportButton.setOnAction(event -> {
             exportData(
                     "state_distribution.csv",
-                    List.of("timestamp", "susceptible", "exposed", "infectious", "asymptomatic", "symptomatic_mild",
+                    Arrays.asList("timestamp", "susceptible", "exposed", "infectious", "asymptomatic",
+                            "symptomatic_mild",
                             "symptomatic_severe", "deceased", "recovered"),
                     simulation.getOutput().getStateDistibutionData(run));
         });
@@ -174,7 +176,7 @@ public class Data extends VBox {
         incidentCaseExportButton.setOnAction(event -> {
             exportData(
                     "incident_cases.csv",
-                    List.of("timestamp", "incident_cases"),
+                    Arrays.asList("timestamp", "incident_cases"),
                     simulation.getOutput().getIncidentCaseData(run));
         });
         HBox incidentCaseExport = new HBox(incidentCaseExportButton);
@@ -186,7 +188,7 @@ public class Data extends VBox {
         prevalentCaseExportButton.setOnAction(event -> {
             exportData(
                     "prevalent_cases.csv",
-                    List.of("timestamp", "prevalent_cases"),
+                    Arrays.asList("timestamp", "prevalent_cases"),
                     simulation.getOutput().getPrevalentCaseData(run));
         });
         HBox prevalentCaseExport = new HBox(prevalentCaseExportButton);
@@ -198,7 +200,7 @@ public class Data extends VBox {
         cumulativeCaseExportButton.setOnAction(event -> {
             exportData(
                     "cumulative_cases.csv",
-                    List.of("timestamp", "cumulative_cases"),
+                    Arrays.asList("timestamp", "cumulative_cases"),
                     simulation.getOutput().getCumulativeCaseData(run));
         });
         HBox cumulativeCaseExport = new HBox(cumulativeCaseExportButton);
@@ -210,7 +212,7 @@ public class Data extends VBox {
         hospitalisationExportButton.setOnAction(event -> {
             exportData(
                     "hospitalisations.csv",
-                    List.of("timestamp", "hospitalisations"),
+                    Arrays.asList("timestamp", "hospitalisations"),
                     simulation.getOutput().getHospitalisationData(run));
         });
         HBox hospitalisationExport = new HBox(hospitalisationExportButton);
@@ -222,7 +224,7 @@ public class Data extends VBox {
         deathExportButton.setOnAction(event -> {
             exportData(
                     "deaths.csv",
-                    List.of("timestamp", "deaths"),
+                    Arrays.asList("timestamp", "deaths"),
                     simulation.getOutput().getDeathData(run));
         });
         HBox deathExport = new HBox(deathExportButton);
@@ -273,7 +275,7 @@ public class Data extends VBox {
             nextRun.setDisable(true);
         }
 
-        HBox box = new HBox(previousRun, runLabel, nextRun);
+        HBox box = new HBox(20, previousRun, runLabel, nextRun);
         box.setAlignment(Pos.CENTER);
 
         return box;

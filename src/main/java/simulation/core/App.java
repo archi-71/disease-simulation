@@ -1,5 +1,6 @@
 package simulation.core;
 
+import atlantafx.base.theme.PrimerLight;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -15,6 +16,8 @@ public class App extends Application {
         stage.setTitle("A Multi-Agent Simulation of Disease Spread");
         stage.setMinWidth(minWidth);
         stage.setMinHeight(minHeight);
+
+        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
         Simulation simulation = new Simulation();
         Layout layout = new Layout(simulation, stage);
