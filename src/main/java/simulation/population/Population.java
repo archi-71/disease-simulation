@@ -3,7 +3,10 @@ package simulation.population;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutionException;
 
 import simulation.core.InitialisationException;
 import simulation.core.SimulationOutput;
@@ -20,7 +23,8 @@ public class Population {
         return individuals;
     }
 
-    public void initialise(PopulationParams params, Environment environment, SimulationOutput output)
+    public void initialise(PopulationParams params, Environment environment, SimulationOutput output,
+            ScheduledExecutorService scheduler)
             throws InitialisationException {
         parameters = params;
 
@@ -44,27 +48,39 @@ public class Population {
         }
 
         // Populate households
-        individuals = new ArrayList<>();
+        List<Future<Individual>> futures = new ArrayList<>();
         for (int h = 0; h < households.size(); h++) {
             Building home = homes.get(h);
             int componentID = home.getComponentID();
             for (int i = 0; i < households.get(h); i++) {
-                AgeGroup ageGroup = parameters.getAgeDistribution().sample();
-                int age = (int) (Math.random() * (ageGroup.getMaxAge() - ageGroup.getMinAge() + 1))
-                        + ageGroup.getMinAge();
-                Building workplace;
-                if (age < 5 || age > 65 ||
-                        (age >= 18 && Math.random() < parameters.getUnemploymentRate().getValue()) ||
-                        (age < 18 && Math.random() > parameters.getSchoolEntryRate().getValue())) {
-                    workplace = null;
-                } else if (age < 18) {
-                    workplace = environment.getRandomSchool(componentID);
-                } else if (age < 25 && Math.random() < parameters.getUniversityEntryRate().getValue()) {
-                    workplace = environment.getRandomUniversity(componentID);
-                } else {
-                    workplace = environment.getRandomWorkplace(componentID);
-                }
-                individuals.add(new Individual(environment, output, age, home, workplace));
+                futures.add(scheduler.schedule(() -> {
+                    AgeGroup ageGroup = parameters.getAgeDistribution().sample();
+                    int age = (int) (Math.random() * (ageGroup.getMaxAge() - ageGroup.getMinAge() + 1))
+                            + ageGroup.getMinAge();
+                    Building workplace;
+                    if (age < 5 || age > 65 ||
+                            (age >= 18 && Math.random() < parameters.getUnemploymentRate().getValue()) ||
+                            (age < 18 && Math.random() > parameters.getSchoolEntryRate().getValue())) {
+                        workplace = null;
+                    } else if (age < 18) {
+                        workplace = environment.getRandomSchool(componentID);
+                    } else if (age < 25 && Math.random() < parameters.getUniversityEntryRate().getValue()) {
+                        workplace = environment.getRandomUniversity(componentID);
+                    } else {
+                        workplace = environment.getRandomWorkplace(componentID);
+                    }
+                    Individual individual = new Individual(environment, output, age, home, workplace);
+                    return individual;
+                }, 0, TimeUnit.MILLISECONDS));
+            }
+        }
+        individuals = new ArrayList<>();
+        for (Future<Individual> future : futures) {
+            try {
+                individuals.add(future.get());
+                System.out.print("\rInitialising population: " + individuals.size() + "/" + parameters.getPopulationSize().getValue());
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
         }
     }

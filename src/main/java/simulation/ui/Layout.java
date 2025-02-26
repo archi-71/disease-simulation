@@ -106,6 +106,7 @@ public class Layout {
         controls.getVisualisationToggle().selectedProperty().addListener((obs, wasVisualising, isVisualising) -> {
             map.setVisualisation(isVisualising);
             data.setVisualisation(isVisualising);
+            updateUI();
         });
     }
 

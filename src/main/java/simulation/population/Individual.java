@@ -1,6 +1,7 @@
 package simulation.population;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import java.util.Set;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Point;
 
+import javafx.util.Pair;
 import simulation.core.Simulation;
 import simulation.core.SimulationOutput;
 import simulation.disease.Health;
@@ -24,20 +26,25 @@ import simulation.environment.Node;
 public class Individual {
 
     private final double SPEED = 0.00001;
+    private final int AMENITY_NUM = 5;
+    private final float LEISURE_GO_OUT_PROB = 0.05f;
+    private final float LEISURE_GO_HOME_PROB = 0.5f;
 
     private Environment environment;
     private SimulationOutput output;
 
-    // Individual characteristics
+    // Characteristics
     private int age;
-    private Building home;
-    private Building workplace;
     private boolean isEssential;
     private Schedule schedule;
-    private List<Node> homeToWorkplace;
-    private List<Node> workplaceToHome;
 
-    // Individual current state
+    // Locations and routes
+    private Building home;
+    private Building workplace;
+    private List<Building> amenities;
+    private HashMap<Pair<Building, Building>, List<Node>> routeCache;
+
+    // Current state
     private Activity activity;
     private Point position;
     private Node location;
@@ -49,16 +56,39 @@ public class Individual {
     public Individual(Environment environment, SimulationOutput output, int age, Building home, Building workplace) {
         this.environment = environment;
         this.output = output;
-        this.age = age;
+
         this.home = home;
         this.workplace = workplace;
-        isEssential = workplace != null && workplace.isEssential();
-        schedule = new Schedule(age, workplace != null);
-        if (workplace != null) {
-            homeToWorkplace = findRoute(home, workplace);
-            workplaceToHome = new ArrayList<>(homeToWorkplace);
-            java.util.Collections.reverse(workplaceToHome);
+        this.amenities = new ArrayList<Building>();
+        for (int i = 0; i < AMENITY_NUM; i++) {
+            Building amenity = environment.getRandomAmenity(home.getComponentID());
+            if (amenity != null) {
+                amenities.add(amenity);
+            }
         }
+
+        this.routeCache = new HashMap<Pair<Building, Building>, List<Node>>();
+        ArrayList<Building> regularBuildings = new ArrayList<Building>(amenities);
+        regularBuildings.add(home);
+        if (workplace != null) {
+            regularBuildings.add(workplace);
+        }
+        for (int i = 0; i < regularBuildings.size() - 1; i++) {
+            for (int j = i + 1; j < regularBuildings.size(); j++) {
+                Building b1 = regularBuildings.get(i);
+                Building b2 = regularBuildings.get(j);
+                List<Node> route = findRoute(b1, b2);
+                List<Node> reverseRoute = new ArrayList<Node>(route);
+                Collections.reverse(reverseRoute);
+                routeCache.put(new Pair<Building, Building>(b1, b2), route);
+                routeCache.put(new Pair<Building, Building>(b2, b1), reverseRoute);
+            }
+        }
+
+        this.age = age;
+        this.isEssential = workplace != null && workplace.isEssential();
+        this.schedule = new Schedule(age, workplace != null);
+
         reset();
     }
 
@@ -118,13 +148,13 @@ public class Individual {
                     goToHome();
                 }
             }
-        // Isolate individual if needed
+            // Isolate individual if needed
         } else if (health.isSelfIsolating()) {
             if (activity != Activity.ISOLATION) {
                 activity = Activity.ISOLATION;
                 goToHome();
             }
-        // Otherwise follow normal schedule
+            // Otherwise follow normal schedule
         } else {
             if (activity == Activity.HOPSITALISATION) {
                 hospital.dischargePatient(output);
@@ -136,6 +166,9 @@ public class Individual {
     }
 
     private void followSchedule(int dayTime) {
+        if (route != null) {
+            return;
+        }
         Activity newActivity = schedule.getActivity(dayTime);
         switch (newActivity) {
             case SLEEP:
@@ -151,7 +184,7 @@ public class Individual {
                 }
                 break;
             case LEISURE:
-                if (activity != Activity.LEISURE || route == null && Math.random() <= 0.01) {
+                if (activity != Activity.LEISURE || Math.random() <= LEISURE_GO_OUT_PROB) {
                     activity = Activity.LEISURE;
                     goToLeisure();
                 }
@@ -161,19 +194,21 @@ public class Individual {
     }
 
     private void goToHome() {
-        if (location == workplace)
-            route = workplaceToHome;
-        else
+        if (location instanceof Building) {
+            route = routeCache.get(new Pair<Building, Building>((Building) location, home));
+        } else {
             route = findRoute(location, home);
+        }
         routeIndex = 0;
     }
 
     private void goToWork() {
         if ((!health.inLockdown() || isEssential) && !workplace.isClosed()) {
-            if (location == home)
-                route = homeToWorkplace;
-            else
+            if (location instanceof Building) {
+                route = routeCache.get(new Pair<Building, Building>((Building) location, workplace));
+            } else {
                 route = findRoute(location, workplace);
+            }
             routeIndex = 0;
             return;
         }
@@ -181,10 +216,14 @@ public class Individual {
     }
 
     private void goToLeisure() {
-        if (!health.inLockdown() && Math.random() < 0.5) {
-            Building amenity = environment.getRandomAmenity(location.getComponentID());
-            if (amenity != null && !amenity.isClosed()) {
-                route = findRoute(location, amenity);
+        if (!health.inLockdown() && Math.random() > LEISURE_GO_HOME_PROB) {
+            Building amenity = amenities.get((int) (Math.random() * amenities.size()));
+            if (!amenity.isClosed()) {
+                if (location instanceof Building) {
+                    route = routeCache.get(new Pair<Building, Building>((Building) location, amenity));
+                } else {
+                    route = findRoute(location, amenity);
+                }
                 routeIndex = 0;
                 return;
             }
@@ -255,11 +294,11 @@ public class Individual {
             Node current = frontier.poll();
 
             if (current.equals(end)) {
-                List<Node> route = new LinkedList<>();
-                route.add(current);
+                LinkedList<Node> route = new LinkedList<>();
+                route.addFirst(current);
                 while (cameFrom.containsKey(current)) {
                     current = cameFrom.get(current);
-                    route.add(0, current);
+                    route.addFirst(current);
                 }
                 return route;
             }

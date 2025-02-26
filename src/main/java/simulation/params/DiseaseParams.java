@@ -13,7 +13,7 @@ public class DiseaseParams implements IParam {
 
         private FloatParam transmissionRate = new FloatParam("Transmission Rate",
                         "The average number of successful transmissions from an infectious to susceptible individual each day",
-                        5f, 0f, Float.MAX_VALUE);
+                        1f, 0f, Float.MAX_VALUE);
 
         private MapParam<AgeGroup, FloatParam> symptomaticProbability = new MapParam<AgeGroup, FloatParam>(
                         "Symptomatic Probability By Age") {
@@ -47,7 +47,7 @@ public class DiseaseParams implements IParam {
                                         0.9f, 0f, 1f));
                         setValue(AgeGroup._90_PLUS, new FloatParam("90+ years",
                                         "The probability of an individual aged 90 years or older old to develop symptoms after being infected",
-                                        0.95f, 0f, 1f));
+                                        0.9f, 0f, 1f));
                 }
         };
 
@@ -56,34 +56,34 @@ public class DiseaseParams implements IParam {
                 {
                         setValue(AgeGroup._0_TO_9, new FloatParam("0 to 9 years",
                                         "The probability of an individual aged 0 to 9 years old to develop severe symptoms after being infected",
-                                        0.0005f, 0f, 1f));
+                                        0.00027f, 0f, 1f));
                         setValue(AgeGroup._10_TO_19, new FloatParam("10 to 19 years",
                                         "The probability of an individual aged 10 to 19 years old to develop severe symptoms after being infected",
-                                        0.001f, 0f, 1f));
+                                        0.00087f, 0f, 1f));
                         setValue(AgeGroup._20_TO_29, new FloatParam("20 to 29 years",
                                         "The probability of an individual aged 20 to 29 years old to develop severe symptoms after being infected",
-                                        0.005f, 0f, 1f));
+                                        0.00378f, 0f, 1f));
                         setValue(AgeGroup._30_TO_39, new FloatParam("30 to 39 years",
                                         "The probability of an individual aged 30 to 39 years old to develop severe symptoms after being infected",
-                                        0.01f, 0f, 1f));
+                                        0.01092f, 0f, 1f));
                         setValue(AgeGroup._40_TO_49, new FloatParam("40 to 49 years",
                                         "The probability of an individual aged 40 to 49 years old to develop severe symptoms after being infected",
-                                        0.05f, 0f, 1f));
+                                        0.01823f, 0f, 1f));
                         setValue(AgeGroup._50_TO_59, new FloatParam("50 to 59 years",
                                         "The probability of an individual aged 50 to 59 years old to develop severe symptoms after being infected",
-                                        0.1f, 0f, 1f));
+                                        0.04292f, 0f, 1f));
                         setValue(AgeGroup._60_TO_69, new FloatParam("60 to 69 years",
                                         "The probability of an individual aged 60 to 69 years old to develop severe symptoms after being infected",
-                                        0.2f, 0f, 1f));
+                                        0.0846f, 0f, 1f));
                         setValue(AgeGroup._70_TO_79, new FloatParam("70 to 79 years",
                                         "The probability of an individual aged 70 to 79 years old to develop severe symptoms after being infected",
-                                        0.3f, 0f, 1f));
+                                        0.14789f, 0f, 1f));
                         setValue(AgeGroup._80_TO_89, new FloatParam("80 to 89 years",
                                         "The probability of an individual aged 80 to 89 years old to develop severe symptoms after being infected",
-                                        0.4f, 0f, 1f));
+                                        0.20995f, 0f, 1f));
                         setValue(AgeGroup._90_PLUS, new FloatParam("90+ years",
                                         "The probability of an individual aged 90 years or older to develop severe symptoms after being infected",
-                                        0.4f, 0f, 1f));
+                                        0.20995f, 0f, 1f));
                 }
         };
         private MapParam<AgeGroup, FloatParam> mortalityProbability = new MapParam<AgeGroup, FloatParam>(
@@ -91,76 +91,76 @@ public class DiseaseParams implements IParam {
                 {
                         setValue(AgeGroup._0_TO_9, new FloatParam("0 to 9 years",
                                         "The probability of an individual aged 0 to 9 years old to die to the disease after being infected",
-                                        0.0001f, 0f, 1f));
+                                        0.00002f, 0f, 1f));
                         setValue(AgeGroup._10_TO_19, new FloatParam("10 to 19 years",
                                         "The probability of an individual aged 10 to 19 years old to die to the disease after being infected",
-                                        0.0002f, 0f, 1f));
+                                        0.00002f, 0f, 1f));
                         setValue(AgeGroup._20_TO_29, new FloatParam("20 to 29 years",
                                         "The probability of an individual aged 20 to 29 years old to die to the disease after being infected",
-                                        0.001f, 0f, 1f));
+                                        0.0001f, 0f, 1f));
                         setValue(AgeGroup._30_TO_39, new FloatParam("30 to 39 years",
                                         "The probability of an individual aged 30 to 39 years old to die to the disease after being infected",
-                                        0.005f, 0f, 1f));
+                                        0.00032f, 0f, 1f));
                         setValue(AgeGroup._40_TO_49, new FloatParam("40 to 49 years",
                                         "The probability of an individual aged 40 to 49 years old to die to the disease after being infected",
-                                        0.01f, 0f, 1f));
+                                        0.00098f, 0f, 1f));
                         setValue(AgeGroup._50_TO_59, new FloatParam("50 to 59 years",
                                         "The probability of an individual aged 50 to 59 years old to die to the disease after being infected",
-                                        0.02f, 0f, 1f));
+                                        0.00265f, 0f, 1f));
                         setValue(AgeGroup._60_TO_69, new FloatParam("60 to 69 years",
                                         "The probability of an individual aged 60 to 69 years old to die to the disease after being infected",
-                                        0.05f, 0f, 1f));
+                                        0.00766f, 0f, 1f));
                         setValue(AgeGroup._70_TO_79, new FloatParam("70 to 79 years",
                                         "The probability of an individual aged 70 to 79 years old to die to the disease after being infected",
-                                        0.15f, 0f, 1f));
+                                        0.02439f, 0f, 1f));
                         setValue(AgeGroup._80_TO_89, new FloatParam("80 to 89 years",
                                         "The probability of an individual aged 80 to 89 years old to die to the disease after being infected",
-                                        0.25f, 0f, 1f));
+                                        0.08292f, 0f, 1f));
                         setValue(AgeGroup._90_PLUS, new FloatParam("90+ years",
                                         "The probability of an individual aged 90 years or older to die to the disease after being infected",
-                                        0.3f, 0f, 1f));
+                                        0.1619f, 0f, 1f));
                 }
         };
 
         private FloatParam relativeMortalityWithoutHospitalisation = new FloatParam(
                         "Relative Mortality Without Hospitalisation",
                         "The multiplier applied to an individual's mortality rate if they fail to receive hospital treatment",
-                        3f, 1, Float.MAX_VALUE);
+                        2f, 1, Float.MAX_VALUE);
 
         private GammaDistributionParam exposedToInfectiousPeriod = new GammaDistributionParam(
                         "Exposed to Infectious Period",
                         "The number of days from exposure to becoming infectious",
-                        0.5f, 0.1f);
+                        4.5f, 1.5f);
 
         private GammaDistributionParam infectiousToSymptomaticPeriod = new GammaDistributionParam(
                         "Infectious to Symptomatic Period",
                         "The number of days from becoming infectious to showing symptoms",
-                        1f, 0.2f);
+                        1.1f, 0.9f);
 
         private GammaDistributionParam mildToSevereSymptomaticPeriod = new GammaDistributionParam(
                         "Mild to Severe Symptomatic Period",
                         "The number of days from showing mild symptoms to showing severe symptoms",
-                        1f, 0.2f);
+                        7.4f, 2.95f);
 
         private GammaDistributionParam severeSymptomaticToDeathPeriod = new GammaDistributionParam(
                         "Severe Symptomatic to Death Period",
                         "The number of days from showing severe symptoms to death",
-                        1f, 0.2f);
+                        10.7f, 4.8f);
 
         private GammaDistributionParam asymptomaticToRecoveredPeriod = new GammaDistributionParam(
                         "Asymptomatic To Recovered Period",
                         "The number of days from being asymptomatic to recovering",
-                        1f, 0.2f);
+                        8f, 2f);
 
         private GammaDistributionParam mildSymptomaticToRecoveredPeriod = new GammaDistributionParam(
                         "Mild Symptomatic To Recovered Period",
                         "The number of days from showing mild symptoms to recovering",
-                        1.25f, 0.25f);
+                        8f, 2f);
 
         private GammaDistributionParam severeSymptomaticToRecoveredPeriod = new GammaDistributionParam(
                         "Severe Symptomatic To Recovered Period",
                         "The number of days from showing severe symptoms to recovering",
-                        1.5f, 0.3f);
+                        18.1f, 6.3f);
 
         public DiseaseParams() {
         }

@@ -14,7 +14,7 @@ public class Simulation {
 
     public static final int TIME_STEP = 600;
     public static final int DAY_LENGTH = 86400;
-    public final int THREAD_NUM = Runtime.getRuntime().availableProcessors();
+    public final int THREAD_NUM = Math.min(10, Runtime.getRuntime().availableProcessors());
 
     private SimulationParams parameters;
     private SimulationOutput output;
@@ -89,12 +89,14 @@ public class Simulation {
         stateChangeCallback = callback;
     }
 
-    public boolean initialise(SimulationParams params) throws InitialisationException {
+    public void initialise(SimulationParams params) throws InitialisationException {
         if (state == SimulationState.PLAYING) {
             stopScheduler();
         }
         changeState(SimulationState.UNINITIALISED);
         parameters = new SimulationParams(params);
+
+        scheduler = Executors.newScheduledThreadPool(THREAD_NUM);
 
         if (parameters.getEnvironmentParams().isDirty()) {
             try {
@@ -120,7 +122,7 @@ public class Simulation {
         if (parameters.getPopulationParams().isDirty()
                 || parameters.getEnvironmentParams().isDirty()) {
             try {
-                population.initialise(parameters.getPopulationParams(), environment, output);
+                population.initialise(parameters.getPopulationParams(), environment, output, scheduler);
             } catch (InitialisationException e) {
                 throw new InitialisationException("Population initialisation failed: " + e.getMessage());
             }
@@ -136,9 +138,7 @@ public class Simulation {
             }
         }
 
-        scheduler = Executors.newScheduledThreadPool(THREAD_NUM);
         reset();
-        return true;
     }
 
     public void play() {
