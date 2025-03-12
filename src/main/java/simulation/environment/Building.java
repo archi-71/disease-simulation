@@ -1,6 +1,8 @@
 package simulation.environment;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -10,21 +12,19 @@ import simulation.population.Individual;
 
 public class Building extends Node {
 
-    private String id;
     private BuildingType type;
-    private HashSet<Individual> occupants;
     private boolean closed;
+    private List<HashSet<Individual>> rooms;
 
-    public String getID() {
-        return id;
+    public Building(Geometry geometry, BuildingType type) {
+        super(geometry);
+        this.type = type;
+        rooms = new ArrayList<>();
+        rooms.add(new HashSet<>());
     }
 
     public BuildingType getType() {
         return type;
-    }
-
-    public HashSet<Individual> getOccupants() {
-        return occupants;
     }
 
     public boolean isClosed() {
@@ -35,19 +35,27 @@ public class Building extends Node {
         this.closed = closed;
     }
 
-    public Building(Geometry geometry, String id, BuildingType type) {
-        super(geometry);
-        this.id = id;
-        this.type = type;
-        occupants = new HashSet<>();
+    public void setRooms(int roomNum) {
+        rooms.clear();
+        for (int i = 0; i < roomNum; i++) {
+            rooms.add(new HashSet<>());
+        }
     }
 
-    public synchronized void addOccupant(Individual individual) {
-        occupants.add(individual);
+    public int getRandomRoom() {
+        return (int) (Math.random() * rooms.size());
+    }   
+
+    public HashSet<Individual> getOccupants(int room) {
+        return rooms.get(room);
     }
 
-    public synchronized void removeOccupant(Individual individual) {
-        occupants.remove(individual);
+    public synchronized void addOccupant(Individual individual, int room) {
+        rooms.get(room).add(individual);
+    }
+
+    public synchronized void removeOccupant(Individual individual, int room) {
+        rooms.get(room).remove(individual);
     }
 
     public boolean isEssential() {
@@ -55,8 +63,10 @@ public class Building extends Node {
     }
 
     public void reset() {
-        occupants.clear();
         closed = false;
+        for (HashSet<Individual> room : rooms) {
+            room.clear();
+        }
     }
 
     @Override

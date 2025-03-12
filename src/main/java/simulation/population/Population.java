@@ -3,6 +3,7 @@ package simulation.population;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +16,9 @@ import simulation.environment.Environment;
 import simulation.params.PopulationParams;
 
 public class Population {
+
+    private static final int AMENITY_NUM = 3;
+    private static final int ROOM_SIZE = 8;
 
     private PopulationParams parameters;
     private ArrayList<Individual> individuals;
@@ -48,6 +52,7 @@ public class Population {
         }
 
         // Populate households
+        ConcurrentHashMap<Building, Integer> publicMaxOccupancies = new ConcurrentHashMap<>();
         List<Future<Individual>> futures = new ArrayList<>();
         for (int h = 0; h < households.size(); h++) {
             Building home = homes.get(h);
@@ -57,6 +62,7 @@ public class Population {
                     AgeGroup ageGroup = parameters.getAgeDistribution().sample();
                     int age = (int) (Math.random() * (ageGroup.getMaxAge() - ageGroup.getMinAge() + 1))
                             + ageGroup.getMinAge();
+
                     Building workplace;
                     if (age < 5 || age > 65 ||
                             (age >= 18 && Math.random() < parameters.getUnemploymentRate().getValue()) ||
@@ -69,7 +75,20 @@ public class Population {
                     } else {
                         workplace = environment.getRandomWorkplace(componentID);
                     }
-                    Individual individual = new Individual(environment, output, age, home, workplace);
+                    if (workplace != null) {
+                        publicMaxOccupancies.put(workplace, publicMaxOccupancies.getOrDefault(workplace, 0) + 1);
+                    }
+
+                    List<Building> amenities = new ArrayList<Building>();
+                    for (int j = 0; j < AMENITY_NUM; j++) {
+                        Building amenity = environment.getRandomAmenity(componentID);
+                        if (amenity != null) {
+                            amenities.add(amenity);
+                            publicMaxOccupancies.put(amenity, publicMaxOccupancies.getOrDefault(amenity, 0) + 1);
+                        }
+                    }
+
+                    Individual individual = new Individual(environment, output, age, home, workplace, amenities);
                     return individual;
                 }, 0, TimeUnit.MILLISECONDS));
             }
@@ -78,11 +97,18 @@ public class Population {
         for (Future<Individual> future : futures) {
             try {
                 individuals.add(future.get());
-                System.out.print("\rInitialising population: " + individuals.size() + "/" + parameters.getPopulationSize().getValue());
+                System.out.print("\rInitialising population: " + individuals.size() + "/"
+                        + parameters.getPopulationSize().getValue());
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
         }
+
+        for (Building building : publicMaxOccupancies.keySet()) {
+            int roomNum = (int) Math.ceil(publicMaxOccupancies.get(building) / (float) ROOM_SIZE);
+            building.setRooms(roomNum);
+        }
+        publicMaxOccupancies.clear();
     }
 
     public void step(ScheduledExecutorService scheduler, int dayTime) {

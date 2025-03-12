@@ -15,7 +15,7 @@ public class EnvironmentParams implements IParam {
             "maps/small/warwick/roads.shp");
     private IntegerParam hospitalCapacity = new IntegerParam("Total Hospital Capacity",
             "The maximum number of individuals who can be hospitalised simultaneously",
-            500, 0, Integer.MAX_VALUE);
+            1000, 0, Integer.MAX_VALUE);
 
     public EnvironmentParams(Stage stage) {
         buildingsFile.setStage(stage);

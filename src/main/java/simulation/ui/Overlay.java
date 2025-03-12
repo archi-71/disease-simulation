@@ -13,9 +13,9 @@ import javafx.util.Duration;
 
 public class Overlay extends StackPane {
 
-    private final Image SPINNER_IMAGE = new Image("/simulation/spinner.png");
-    private final double SPINNER_SIZE = 30;
-    private final double SPINNER_SPEED = 0.5;
+    private static final Image SPINNER_IMAGE = new Image("/simulation/spinner.png");
+    private static final double SPINNER_SIZE = 30;
+    private static final double SPINNER_SPEED = 0.5;
 
     private VBox box;
 

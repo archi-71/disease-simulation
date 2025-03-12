@@ -125,7 +125,7 @@ public class Data extends VBox {
         }
         stateDistributionGraphs.add(stateDistributionGraph);
 
-        LineGraph incidentCaseGraph = new LineGraph("Incident Cases", "New Cases (per hour)",
+        LineGraph incidentCaseGraph = new LineGraph("Incident Cases", "New Cases (per day)",
                 population, duration);
         incidentCaseGraph.addSeries("Incident Cases", "red");
         incidentCaseGraphs.add(incidentCaseGraph);

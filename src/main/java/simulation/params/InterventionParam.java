@@ -25,11 +25,11 @@ public class InterventionParam implements IParam {
                 switch (type) {
                         case MASKS:
                                 params.setValue("incomingProtection",
-                                                new FloatParam("Incoming Protection",
+                                                new FloatParam("Inhalation Protection",
                                                                 "The effectiveness of the mask at minimising disease spread to the wearer (0 = no effect, 1 = no susceptibility)",
                                                                 0f, 0f, 1f));
                                 params.setValue("outgoingProtection",
-                                                new FloatParam("Outgoing Protection",
+                                                new FloatParam("Exhalation Protection",
                                                                 "The effectiveness of the mask at minimising disease spread from the wearer (0 = no effect, 1 = no infectivity)",
                                                                 0f, 0f, 1f));
                                 params.setValue("compliance",

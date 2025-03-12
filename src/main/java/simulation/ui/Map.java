@@ -41,12 +41,12 @@ import org.geotools.styling.SLD;
 
 public class Map extends StackPane {
 
-    private final int RESOLUTION = 2048;
-    private final float ROAD_STROKE_WIDTH = 2f;
-    private final float BUILDING_STROKE_WIDTH = 1f;
-    private final float INDIVIDUAL_SIZE = 8f;
-    private final double ZOOM_SPEED = 0.0008;
-    private final double MAX_ZOOM = 2;
+    private static final int RESOLUTION = 2048;
+    private static final float ROAD_STROKE_WIDTH = 2f;
+    private static final float BUILDING_STROKE_WIDTH = 1f;
+    private static final float INDIVIDUAL_SIZE = 8f;
+    private static final double ZOOM_SPEED = 0.0008;
+    private static final double MAX_ZOOM = 2;
 
     private Simulation simulation;
 

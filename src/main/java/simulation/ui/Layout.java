@@ -25,8 +25,8 @@ import simulation.params.SimulationParams;
 
 public class Layout {
 
-    private final double OVERLAY_SIZE = 0.25;
-    private final double MIN_SPLIT = 0.1;
+    private static final double OVERLAY_SIZE = 0.25;
+    private static final double MIN_SPLIT = 0.1;
 
     private boolean isResizing = false;
     private double verticalSplit = 0.32;

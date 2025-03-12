@@ -18,6 +18,7 @@ public class Health {
     private HealthState state;
     private float timeInState;
     private float timeInHospital;
+    private float infectiousness;
     private boolean diagnosed;
 
     // Intervention state
@@ -62,6 +63,10 @@ public class Health {
 
     public HealthState getState() {
         return state;
+    }
+
+    public float getInfectiousness() {
+        return infectiousness;
     }
 
     public boolean isDiagnosed() {
@@ -109,6 +114,8 @@ public class Health {
         }
         switch (state) {
             case SUSCEPTIBLE:
+                // Calculate infectivity as the total infectiousness of close contacts
+                float infectivity = 0;
                 for (Individual contact : individual.getContacts()) {
                     // Check if contact is 'close' based on social distancing, and skip if not
                     if (interventions.isSocialDistancingActive()
@@ -126,29 +133,33 @@ public class Health {
                         tracePending = true;
                         timeSinceContact = 0;
                     }
-                    // Check for transmission from infectious contacts
-                    if (contact.getHealth().getState().isInfectious()) {
-                        // Get base transmissibility
-                        float transmissibility = params.getTransmissionRate().getValue() * timeStep;
-                        // Adjust transmissibility based on mask use
-                        if (interventions.isMaskWearingActive()) {
-                            transmissibility *= awareness > 1 - interventions.getMaskCompliance()
-                                    ? 1 - interventions.getMaskIncomingProtection()
-                                    : 1;
-                            transmissibility *= contact.getHealth().getAwareness() > 1
-                                    - interventions.getMaskCompliance()
-                                            ? 1 - interventions.getMaskOutgoingProtection()
-                                            : 1;
-                        }
-                        // Adjust transmissibility based on vaccination
-                        transmissibility *= vaccineTransmissibilityMultiplier;
-                        // Transmit disease with some probability
-                        if (Math.random() < 1 - Math.exp(-transmissibility)) {
-                            transition(HealthState.EXPOSED);
-                            output.countSusceptibleToExposed();
-                            break;
-                        }
+                    // Get contact's base infectiousness
+                    float infectiousness = contact.getHealth().getInfectiousness();
+                    // Adjust infectiousness based on outgoing mask protection
+                    if (interventions.isMaskWearingActive()) {
+                        infectiousness *= contact.getHealth().getAwareness() > 1 - interventions.getMaskCompliance()
+                                ? 1 - interventions.getMaskOutgoingProtection()
+                                : 1;
                     }
+                    // Add infectiousness to total infecticity
+                    infectivity += infectiousness;
+                }
+                // Get base transmissibility
+                float transmissibility = params.getTransmissionRate().getValue() * timeStep;
+                // Adjust transmissibility based on infectivity (which may be zero)
+                transmissibility *= infectivity;
+                // Adjust transmissibility based on incoming mask protection
+                if (interventions.isMaskWearingActive()) {
+                    transmissibility *= awareness > 1 - interventions.getMaskCompliance()
+                            ? 1 - interventions.getMaskIncomingProtection()
+                            : 1;
+                }
+                // Adjust transmissibility based on vaccination
+                transmissibility *= vaccineTransmissibilityMultiplier;
+                // Transmit disease with some probability based on calculated transmissibility
+                if (Math.random() < 1 - Math.exp(-transmissibility)) {
+                    transition(HealthState.EXPOSED);
+                    output.countSusceptibleToExposed();
                 }
                 break;
             case EXPOSED:
@@ -158,7 +169,9 @@ public class Health {
                 }
                 break;
             case INFECTIOUS:
+                infectiousness = timeInState / infectiousToSymptomaticPeriod;
                 if (timeInState >= infectiousToSymptomaticPeriod) {
+                    infectiousness = 1;
                     if (severity * vaccineSeverityMultiplier > 1 - symptomaticProbability) {
                         diagnosed = true;
                         transition(HealthState.SYMPTOMATIC_MILD);
@@ -170,7 +183,9 @@ public class Health {
                 }
                 break;
             case ASYMPTOMATIC:
+                infectiousness = 1 - (timeInState / asymptomaticToRecoveredPeriod);
                 if (timeInState >= asymptomaticToRecoveredPeriod) {
+                    infectiousness = 0;
                     transition(HealthState.RECOVERED);
                     output.countAsymptomaticToRecovered();
                 }
@@ -182,7 +197,9 @@ public class Health {
                         output.countSymptomaticMildToSymptomaticSevere();
                     }
                 } else {
+                    infectiousness = 1 - (timeInState / mildSymptomaticToRecoveredPeriod);
                     if (timeInState >= mildSymptomaticToRecoveredPeriod) {
+                        infectiousness = 0;
                         diagnosed = false;
                         transition(HealthState.RECOVERED);
                         output.countSymptomaticMildToRecovered();
@@ -197,6 +214,7 @@ public class Health {
                     mortalityMultiplier = 1 + (mortalityMultiplier - 1) * hospitalFactor;
                 }
                 if (severity * vaccineSeverityMultiplier > 1 - mortalityProbability * mortalityMultiplier) {
+                    infectiousness = 1 - (timeInState / severeSymptomaticToRecoveredPeriod);
                     if (timeInState >= severeSymptomaticToDeathPeriod) {
                         diagnosed = false;
                         transition(HealthState.DECEASED);
@@ -206,7 +224,9 @@ public class Health {
                         output.countSymptomaticSevereToDeceased();
                     }
                 } else {
+                    infectiousness = 1 - (timeInState / severeSymptomaticToRecoveredPeriod);
                     if (timeInState >= severeSymptomaticToRecoveredPeriod) {
+                        infectiousness = 0;
                         diagnosed = false;
                         transition(HealthState.RECOVERED);
                         output.countSymptomaticSevereToRecovered();
@@ -219,7 +239,9 @@ public class Health {
 
     public void reset() {
         transition(HealthState.SUSCEPTIBLE);
+        timeInState = 0;
         timeInHospital = 0;
+        infectiousness = 0;
         diagnosed = false;
         isolating = false;
         quarantining = false;

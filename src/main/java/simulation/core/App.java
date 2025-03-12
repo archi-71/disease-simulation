@@ -8,14 +8,14 @@ import simulation.ui.Layout;
 
 public class App extends Application {
 
-    private final double minWidth = 800;
-    private final double minHeight = 600;
+    private static final double MIN_WIDTH = 800;
+    private static final double MIN_HEIGHT = 600;
 
     @Override
     public void start(Stage stage) {
         stage.setTitle("A Multi-Agent Simulation of Disease Spread");
-        stage.setMinWidth(minWidth);
-        stage.setMinHeight(minHeight);
+        stage.setMinWidth(MIN_WIDTH);
+        stage.setMinHeight(MIN_HEIGHT);
 
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 

@@ -9,11 +9,11 @@ public class SimulationParams implements IParam {
 
     private IntegerParam runs = new IntegerParam("Simulation Runs",
             "The number of runs of the simulation to run",
-            3, 1, Integer.MAX_VALUE);
+            2, 1, Integer.MAX_VALUE);
 
     private IntegerParam duration = new IntegerParam("Simulation Duration",
             "The duration of the simulation in days",
-            100, 1, Integer.MAX_VALUE);
+            20, 1, Integer.MAX_VALUE);
 
     private EnvironmentParams environmentParams;
     private PopulationParams populationParams;

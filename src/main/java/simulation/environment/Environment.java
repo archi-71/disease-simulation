@@ -2,10 +2,14 @@ package simulation.environment;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.feature.FeatureIterator;
@@ -15,14 +19,16 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.index.strtree.ItemBoundable;
-import org.locationtech.jts.index.strtree.ItemDistance;
-import org.locationtech.jts.index.strtree.STRtree;
+import org.locationtech.jts.index.quadtree.Quadtree;
 
+import javafx.util.Pair;
 import simulation.core.InitialisationException;
 import simulation.params.EnvironmentParams;
 
 public class Environment {
+
+    private static final double ROAD_CLUSTER_DISTANCE = 0.0003;
+    private static final double BUILDING_CONNECT_DISTANCE = 0.001;
 
     private EnvironmentParams parameters;
     private GISLoader gisLoader;
@@ -34,6 +40,8 @@ public class Environment {
     private HashMap<Integer, List<Building>> workplaceMap;
     private HashMap<Integer, List<Building>> amenityMap;
     private HashMap<Integer, List<Building>> nonEssentialMap;
+
+    private ConcurrentHashMap<Pair<Building, Building>, List<Node>> routeCache;
 
     public EnvironmentParams getParameters() {
         return parameters;
@@ -157,6 +165,81 @@ public class Environment {
                 hospital.setCapacity(capacity);
             }
         }
+
+        routeCache = new ConcurrentHashMap<>();
+    }
+
+    public List<Node> getRoute(Node start, Node end) {
+        if (start instanceof Building && end instanceof Building) {
+            Pair<Building, Building> key = new Pair<Building, Building>((Building) start, (Building) end);
+            if (routeCache.containsKey(key)) {
+                return routeCache.get(key);
+            }
+            Pair<Building, Building> reverseKey = new Pair<Building, Building>((Building) end, (Building) start);
+            if (routeCache.containsKey(reverseKey)) {
+                List<Node> route = new ArrayList<>(routeCache.get(reverseKey));
+                Collections.reverse(route);
+                return route;
+            }
+            List<Node> route = findRoute(start, end);
+            routeCache.put(key, route);
+            return route;
+        }
+        return findRoute(start, end);
+    }
+
+    public List<Node> findRoute(Node start, Node end) {
+        Set<Node> visited = new HashSet<>();
+        HashMap<Node, Node> cameFrom = new HashMap<>();
+        HashMap<Node, Double> gScore = new HashMap<>();
+        HashMap<Node, Double> fScore = new HashMap<>();
+        PriorityQueue<Node> frontier = new PriorityQueue<>(
+                Comparator.comparingDouble(node -> fScore.getOrDefault(node, Double.POSITIVE_INFINITY)));
+
+        gScore.put(start, 0.0);
+        fScore.put(start, distance(start, end));
+        frontier.add(start);
+
+        while (!frontier.isEmpty()) {
+            Node current = frontier.poll();
+
+            if (current.equals(end)) {
+                LinkedList<Node> route = new LinkedList<>();
+                route.addFirst(current);
+                while (cameFrom.containsKey(current)) {
+                    current = cameFrom.get(current);
+                    route.addFirst(current);
+                }
+                return route;
+            }
+
+            visited.add(current);
+
+            for (Node neighbour : current.getNeighbours()) {
+                if (visited.contains(neighbour))
+                    continue;
+
+                double g = gScore.getOrDefault(current, Double.POSITIVE_INFINITY)
+                        + distance(current, neighbour);
+
+                if (!frontier.contains(neighbour))
+                    frontier.add(neighbour);
+                else if (g >= gScore.getOrDefault(neighbour, Double.POSITIVE_INFINITY))
+                    continue;
+
+                double f = g + distance(neighbour, end);
+
+                cameFrom.put(neighbour, current);
+                gScore.put(neighbour, g);
+                fScore.put(neighbour, f);
+            }
+        }
+
+        return null;
+    }
+
+    private double distance(Node a, Node b) {
+        return a.getCentre().distance(b.getCentre());
     }
 
     private void buildGraph() {
@@ -164,22 +247,56 @@ public class Environment {
         FeatureIterator<SimpleFeature> iterator = gisLoader.getRoadFeatures().features();
 
         // Build a graph for the road network
-        HashMap<String, Node> roadNodes = new HashMap<>();
-        STRtree index = new STRtree();
+        HashMap<Point, Node> pointNodeMap = new HashMap<>();
+        HashMap<Node, Integer> nodeCountMap = new HashMap<>();
+        Quadtree quadtree = new Quadtree();
         while (iterator.hasNext()) {
             SimpleFeature feature = iterator.next();
             Geometry line = (Geometry) feature.getDefaultGeometry();
             Coordinate[] coordinates = line.getCoordinates();
             Node prev = null;
             for (Coordinate coordinate : coordinates) {
-                String key = coordinate.x + "," + coordinate.y;
-                Node node = roadNodes.get(key);
+                Envelope envelope = new Envelope(coordinate);
+                envelope.expandBy(ROAD_CLUSTER_DISTANCE);
+
+                @SuppressWarnings("unchecked")
+                List<Point> points = (List<Point>) quadtree.query(envelope);
+
+                Node node = null;
+                double minDistance = ROAD_CLUSTER_DISTANCE;
+                for (Point point : points) {
+                    double dist = point.getCoordinate().distance(coordinate);
+                    if (dist < minDistance) {
+                        node = pointNodeMap.get(point);
+                        minDistance = dist;
+                    }
+                }
+
                 if (node == null) {
                     Point point = geometryFactory.createPoint(coordinate);
                     node = new Node(point);
-                    roadNodes.put(key, node);
-                    index.insert(point.getEnvelopeInternal(), point);
+                    quadtree.insert(point.getEnvelopeInternal(), point);
+                    pointNodeMap.put(point, node);
+                    nodeCountMap.put(node, 1);
+                } else {
+                    int count = nodeCountMap.getOrDefault(node, 1);
+                    Point oldPoint = node.getPoint();
+
+                    double avgX = (oldPoint.getX() * count + coordinate.x) / (count + 1);
+                    double avgY = (oldPoint.getY() * count + coordinate.y) / (count + 1);
+
+                    Point newPoint = geometryFactory.createPoint(new Coordinate(avgX, avgY));
+                    node.setGeometry(newPoint);
+
+                    quadtree.remove(oldPoint.getEnvelopeInternal(), oldPoint);
+                    quadtree.insert(newPoint.getEnvelopeInternal(), newPoint);
+
+                    pointNodeMap.remove(oldPoint);
+                    pointNodeMap.put(newPoint, node);
+
+                    nodeCountMap.put(node, count + 1);
                 }
+
                 if (prev != null) {
                     node.addNeighbour(prev);
                     prev.addNeighbour(node);
@@ -191,7 +308,7 @@ public class Environment {
 
         // Compute the connected components of the graph
         int components = 0;
-        for (Node node : roadNodes.values()) {
+        for (Node node : pointNodeMap.values()) {
             if (node.getComponentID() == -1) {
                 Set<Node> visited = new HashSet<>();
                 ArrayList<Node> frontier = new ArrayList<>();
@@ -225,25 +342,26 @@ public class Environment {
                 SimpleFeature feature = iterator.next();
                 Geometry polygon = (Geometry) feature.getDefaultGeometry();
                 Envelope envelope = polygon.getEnvelopeInternal();
-                envelope.expandBy(0.0001);
-                Point nearestRoad = (Point) index.nearestNeighbour(envelope, polygon, new ItemDistance() {
-                    @Override
-                    public double distance(ItemBoundable item1, ItemBoundable item2) {
-                        Geometry g1 = (Geometry) item1.getItem();
-                        Geometry g2 = (Geometry) item2.getItem();
-                        return g1.distance(g2);
+                envelope.expandBy(BUILDING_CONNECT_DISTANCE);
+                @SuppressWarnings("unchecked")
+                List<Point> points = (List<Point>) quadtree.query(envelope);
+                Node roadNode = null;
+                double minDistance = BUILDING_CONNECT_DISTANCE;
+                for (Point point : points) {
+                    double dist = point.distance(polygon);
+                    if (dist < minDistance) {
+                        roadNode = pointNodeMap.get(point);
+                        minDistance = dist;
                     }
-                });
-                if (nearestRoad == null) {
+                }
+                if (roadNode == null) {
                     continue;
                 }
-                String key = nearestRoad.getX() + "," + nearestRoad.getY();
-                Node roadNode = roadNodes.get(key);
                 Building building;
                 if (type == BuildingType.HOSPITAL) {
-                    building = new Hospital(polygon, feature.getAttribute("osm_id").toString());
+                    building = new Hospital(polygon);
                 } else {
-                    building = new Building(polygon, feature.getAttribute("osm_id").toString(), type);
+                    building = new Building(polygon, type);
                 }
                 building.addNeighbour(roadNode);
                 roadNode.addNeighbour(building);

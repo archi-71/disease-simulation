@@ -14,7 +14,7 @@ public class Simulation {
 
     public static final int TIME_STEP = 600;
     public static final int DAY_LENGTH = 86400;
-    public final int THREAD_NUM = Math.min(10, Runtime.getRuntime().availableProcessors());
+    public static final int THREAD_NUM = Math.min(10, Runtime.getRuntime().availableProcessors());
 
     private SimulationParams parameters;
     private SimulationOutput output;

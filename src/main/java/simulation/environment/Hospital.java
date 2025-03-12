@@ -9,8 +9,8 @@ public class Hospital extends Building {
     private int capacity;
     private volatile int occupancy;
 
-    public Hospital(Geometry geometry, String id) {
-        super(geometry, id, BuildingType.HOSPITAL);
+    public Hospital(Geometry geometry) {
+        super(geometry, BuildingType.HOSPITAL);
         this.capacity = 0;
         this.occupancy = 0;
     }

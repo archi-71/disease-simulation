@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Schedule {
 
-    private final double range = 2;
+    private static final double RANDOM_RANGE = 5;
 
     private ArrayList<Event> events;
 
@@ -46,6 +46,6 @@ public class Schedule {
     }
 
     private int getTime(int hours) {
-        return (int) ((hours + Math.random() * range - range / 2) * 3600);
+        return (int) ((hours + Math.random() * RANDOM_RANGE - RANDOM_RANGE / 2) * 3600);
     }
 }

@@ -10,7 +10,7 @@ import simulation.params.InterventionParam;
 
 public class SimulationOutput {
 
-    private final int incidentCasePeriod = 3600;
+    private static final int INCIDENT_CASE_PERIOD = 86400;
 
     private int runs;
 
@@ -172,7 +172,7 @@ public class SimulationOutput {
                 deceasedNum,
                 recoveredNum)));
 
-        if (timestamp % incidentCasePeriod == 0) {
+        if (timestamp % INCIDENT_CASE_PERIOD == 0) {
             incidentCaseData.get(run).add(new ArrayList<>(Arrays.asList(timestamp, incidentCases)));
             incidentCases = 0;
         }

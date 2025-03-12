@@ -9,17 +9,17 @@ public class DiseaseParams implements IParam {
 
         private IntegerParam initialInfected = new IntegerParam("Initital Number Infected",
                         "The number of individuals who have been exposed to the disease at the start of the simulation",
-                        1, 1, Integer.MAX_VALUE);
+                        10, 1, Integer.MAX_VALUE);
 
         private FloatParam transmissionRate = new FloatParam("Transmission Rate",
                         "The average number of successful transmissions from an infectious to susceptible individual each day",
-                        1f, 0f, Float.MAX_VALUE);
+                        3f, 0f, Float.MAX_VALUE);
 
         private MapParam<AgeGroup, FloatParam> symptomaticProbability = new MapParam<AgeGroup, FloatParam>(
                         "Symptomatic Probability By Age") {
                 {
                         setValue(AgeGroup._0_TO_9, new FloatParam("0 to 9 years",
-                                        "The probability of an individual aged 0 to 4 years old to develop symptoms after being infected",
+                                        "The probability of an individual aged 0 to 9 years old to develop symptoms after being infected",
                                         0.5f, 0f, 1f));
                         setValue(AgeGroup._10_TO_19, new FloatParam("10 to 19 years",
                                         "The probability of an individual aged 10 to 19 years old to develop symptoms after being infected",
@@ -130,37 +130,37 @@ public class DiseaseParams implements IParam {
         private GammaDistributionParam exposedToInfectiousPeriod = new GammaDistributionParam(
                         "Exposed to Infectious Period",
                         "The number of days from exposure to becoming infectious",
-                        4.5f, 1.5f);
+                        1f, 0.5f);
 
         private GammaDistributionParam infectiousToSymptomaticPeriod = new GammaDistributionParam(
                         "Infectious to Symptomatic Period",
                         "The number of days from becoming infectious to showing symptoms",
-                        1.1f, 0.9f);
+                        0.5f, 0.25f);
 
         private GammaDistributionParam mildToSevereSymptomaticPeriod = new GammaDistributionParam(
                         "Mild to Severe Symptomatic Period",
                         "The number of days from showing mild symptoms to showing severe symptoms",
-                        7.4f, 2.95f);
+                        1.5f, 1f);
 
         private GammaDistributionParam severeSymptomaticToDeathPeriod = new GammaDistributionParam(
                         "Severe Symptomatic to Death Period",
                         "The number of days from showing severe symptoms to death",
-                        10.7f, 4.8f);
+                        2.5f, 1.5f);
 
         private GammaDistributionParam asymptomaticToRecoveredPeriod = new GammaDistributionParam(
                         "Asymptomatic To Recovered Period",
                         "The number of days from being asymptomatic to recovering",
-                        8f, 2f);
+                        2f, 0.5f);
 
         private GammaDistributionParam mildSymptomaticToRecoveredPeriod = new GammaDistributionParam(
                         "Mild Symptomatic To Recovered Period",
                         "The number of days from showing mild symptoms to recovering",
-                        8f, 2f);
+                        2f, 0.5f);
 
         private GammaDistributionParam severeSymptomaticToRecoveredPeriod = new GammaDistributionParam(
                         "Severe Symptomatic To Recovered Period",
                         "The number of days from showing severe symptoms to recovering",
-                        18.1f, 6.3f);
+                        3f, 1f);
 
         public DiseaseParams() {
         }
