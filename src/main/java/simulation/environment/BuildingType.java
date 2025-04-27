@@ -1,5 +1,8 @@
 package simulation.environment;
 
+/**
+ * Enum class for building types
+ */
 public enum BuildingType {
 
     RESIDENTIAL("Residential", "#FF6F6F", "#B13C3C"),
@@ -22,20 +25,42 @@ public enum BuildingType {
     private final String fillColour;
     private final String outlineColour;
 
+    /**
+     * Construct a new building type
+     * 
+     * @param name          Name of building type
+     * @param fillColour    Visualisation fill colour
+     * @param outlineColour Visualisation outline colour
+     */
     BuildingType(String name, String fillColour, String outlineColour) {
         this.name = name;
         this.fillColour = fillColour;
         this.outlineColour = outlineColour;
     }
 
+    /**
+     * Get the name of the building type
+     * 
+     * @return Name of building type
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Get the fill colour of the building type for visualisation
+     * 
+     * @return Visualisation fill colour
+     */
     public String getFillColour() {
         return fillColour;
     }
 
+    /**
+     * Get the outline colour of the building type for visualisation
+     * 
+     * @return Visualisation outline colour
+     */
     public String getOutlineColour() {
         return outlineColour;
     }

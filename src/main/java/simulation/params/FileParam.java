@@ -15,6 +15,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
+/**
+ * Class to represent a file parameter
+ */
 public class FileParam implements IParam {
 
     private Stage stage;
@@ -23,6 +26,12 @@ public class FileParam implements IParam {
     private File file;
     private boolean dirty;
 
+    /**
+     * Construct a new file parameter
+     * @param name Parameter name
+     * @param description Parameter description
+     * @param defaultPath Default file path
+     */
     public FileParam(String name, String description, String defaultPath) {
         this.name = name;
         this.description = description;
@@ -30,34 +39,59 @@ public class FileParam implements IParam {
         this.dirty = true;
     }
 
+    /**
+     * Clone a file parameter
+     * @param param File parameter to copy
+     */
     public FileParam(FileParam param) {
         this.name = param.name;
         this.file = new File(param.file.getAbsolutePath());
         this.dirty = param.dirty;
     }
 
+    /**
+     * Set stage for file selection prompt
+     * @param stage Stage reference
+     */
     public void setStage(Stage stage) {
         this.stage = stage;
     }
 
+    /**
+     * Get file name
+     * @return File name
+     */
     public File getFile() {
         return file;
     }
 
+    /**
+     * Check if parameter has been modified
+     * @return True if parameter has been modified
+     */
     public boolean isDirty() {
         return dirty;
     }
 
+    /**
+     * Mark parameter as up to date
+     */
     public void clean() {
         dirty = false;
     }
 
+    /**
+     * Generate UI to input file parameter
+     * @return Pane for file parameter input
+     */
     public Region getInputUI() {
         Label inputLabel = new Label(name);
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new ExtensionFilter("Shapefiles (*.shp)", "*.shp"));
         Label fileLabel = new Label(file.getName());
         fileLabel.getStyleClass().add("italics");
+
+        // File seclection button
         Button button = new Button("Select file");
         button.setOnAction(event -> {
             File newFile = fileChooser.showOpenDialog(stage);

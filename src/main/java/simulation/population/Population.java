@@ -15,18 +15,39 @@ import simulation.environment.Building;
 import simulation.environment.Environment;
 import simulation.params.PopulationParams;
 
+/**
+ * Class to represent a population of individuals in the simulation
+ */
 public class Population {
 
-    private static final int AMENITY_NUM = 3;
+    // Number of distinct amenities assigned to each individual
+    private static final int AMENITY_NUM = 5;
+
+    // Maximum number of individuals simultaneously allowed in a 'room'
     private static final int ROOM_SIZE = 8;
 
+    // Required simulation components
     private PopulationParams parameters;
-    private ArrayList<Individual> individuals;
+    private List<Individual> individuals;
 
-    public ArrayList<Individual> getIndividuals() {
+    /**
+     * Get the population parameters
+     * 
+     * @return Population parameters
+     */
+    public List<Individual> getIndividuals() {
         return individuals;
     }
 
+    /**
+     * Initialise the population
+     * 
+     * @param params      Population parameters
+     * @param environment Environment
+     * @param output      Simulation output
+     * @param scheduler   Scheduler for multi-threading
+     * @throws InitialisationException If parameters are invalid
+     */
     public void initialise(PopulationParams params, Environment environment, SimulationOutput output,
             ScheduledExecutorService scheduler)
             throws InitialisationException {
@@ -46,6 +67,7 @@ public class Population {
             population += householdSize;
         }
 
+        // Validate population parameters
         if (population < parameters.getPopulationSize().getValue()) {
             throw new InitialisationException(
                     "There are not enough residential buildings to accommodate the population");
@@ -55,14 +77,20 @@ public class Population {
         ConcurrentHashMap<Building, Integer> publicMaxOccupancies = new ConcurrentHashMap<>();
         List<Future<Individual>> futures = new ArrayList<>();
         for (int h = 0; h < households.size(); h++) {
+
+            // Assign a home to the household
             Building home = homes.get(h);
             int componentID = home.getComponentID();
+
             for (int i = 0; i < households.get(h); i++) {
                 futures.add(scheduler.schedule(() -> {
+
+                    // Generate age of the individual
                     AgeGroup ageGroup = parameters.getAgeDistribution().sample();
                     int age = (int) (Math.random() * (ageGroup.getMaxAge() - ageGroup.getMinAge() + 1))
                             + ageGroup.getMinAge();
 
+                    // Generate occupation and assign a workplace for the individual, if any
                     Building workplace;
                     if (age < 5 || age > 65 ||
                             (age >= 18 && Math.random() < parameters.getUnemploymentRate().getValue()) ||
@@ -79,6 +107,7 @@ public class Population {
                         publicMaxOccupancies.put(workplace, publicMaxOccupancies.getOrDefault(workplace, 0) + 1);
                     }
 
+                    // Assign amenities to the individual to visit in their free time
                     List<Building> amenities = new ArrayList<Building>();
                     for (int j = 0; j < AMENITY_NUM; j++) {
                         Building amenity = environment.getRandomAmenity(componentID);
@@ -88,22 +117,25 @@ public class Population {
                         }
                     }
 
+                    // Initialise the individual
                     Individual individual = new Individual(environment, output, age, home, workplace, amenities);
                     return individual;
+
                 }, 0, TimeUnit.MILLISECONDS));
             }
         }
+
+        // Wait for all individuals to be created in parallel
         individuals = new ArrayList<>();
         for (Future<Individual> future : futures) {
             try {
                 individuals.add(future.get());
-                System.out.print("\rInitialising population: " + individuals.size() + "/"
-                        + parameters.getPopulationSize().getValue());
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
         }
 
+        // Assign rooms to buildings based on their maximum occupancy
         for (Building building : publicMaxOccupancies.keySet()) {
             int roomNum = (int) Math.ceil(publicMaxOccupancies.get(building) / (float) ROOM_SIZE);
             building.setRooms(roomNum);
@@ -111,7 +143,14 @@ public class Population {
         publicMaxOccupancies.clear();
     }
 
+    /**
+     * Run a single step of the population simulation
+     * 
+     * @param scheduler Scheduled executor service for multithreading
+     * @param dayTime   Current time of day
+     */
     public void step(ScheduledExecutorService scheduler, int dayTime) {
+        // Initialise a task for each individual
         List<Callable<Void>> tasks = new ArrayList<>();
         for (Individual individual : individuals) {
             tasks.add(() -> {
@@ -119,6 +158,8 @@ public class Population {
                 return null;
             });
         }
+
+        // Delegate tasks to the scheduler
         try {
             scheduler.invokeAll(tasks);
         } catch (InterruptedException e) {
@@ -126,6 +167,9 @@ public class Population {
         }
     }
 
+    /**
+     * Reset the population to its initial state for a new run
+     */
     public void reset() {
         for (Individual individual : individuals) {
             individual.reset();

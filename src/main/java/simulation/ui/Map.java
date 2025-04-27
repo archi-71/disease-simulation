@@ -39,24 +39,39 @@ import org.geotools.map.MapContent;
 import org.geotools.renderer.lite.StreamingRenderer;
 import org.geotools.styling.SLD;
 
+/**
+ * Class for the UI's central map panel
+ */
 public class Map extends StackPane {
 
+    // Dimensions of the map canvases
     private static final int RESOLUTION = 2048;
+
+    // Stroke width of the road lines
     private static final float ROAD_STROKE_WIDTH = 2f;
+
+    // Stroke width of the building outlines
     private static final float BUILDING_STROKE_WIDTH = 1f;
+
+    // Size of the circle icons for individuals
     private static final float INDIVIDUAL_SIZE = 8f;
+
+    // Zoom speed of the map
     private static final double ZOOM_SPEED = 0.0008;
+
+    // Maximum zoom level of the map
     private static final double MAX_ZOOM = 2;
 
     private Simulation simulation;
 
+    // Map components
     private TitledPane legend;
     private Canvas environmentCanvas;
     private Canvas populationCanvas;
     private MapContent mapContent;
 
+    // Map control variables
     private boolean visualisation;
-
     private double width;
     private double height;
     private double centreX;
@@ -70,6 +85,11 @@ public class Map extends StackPane {
     private double scaleFactor;
     private double minZoom;
 
+    /**
+     * Construct a new map
+     * 
+     * @param simulation Simulation
+     */
     public Map(Simulation simulation) {
         this.simulation = simulation;
 
@@ -82,6 +102,9 @@ public class Map extends StackPane {
         getChildren().addAll(new Pane(environmentCanvas, populationCanvas), legend);
     }
 
+    /**
+     * Initialise the map, controls, and legend
+     */
     public void initialise() {
         initialiseMap();
         resetMap();
@@ -89,19 +112,33 @@ public class Map extends StackPane {
         initialiseLegend();
     }
 
+    /**
+     * Draw the environment and population
+     */
     public void draw() {
         drawEnvironment();
         drawPopulation();
     }
 
+    /**
+     * Update the population display
+     */
     public void update() {
         drawPopulation();
     }
 
+    /**
+     * Set whether live visualisation is enabled
+     * 
+     * @param visualisation True if live visualisation is enabled
+     */
     public void setVisualisation(boolean visualisation) {
         this.visualisation = visualisation;
     }
 
+    /**
+     * Initialise the map's content
+     */
     private void initialiseMap() {
         GISLoader gisLoader = simulation.getEnvironment().getGISLoader();
 
@@ -109,14 +146,17 @@ public class Map extends StackPane {
             mapContent.dispose();
         }
 
+        // Initialise map content
         mapContent = new MapContent();
 
+        // Add layer for each building type
         for (BuildingType type : BuildingType.values()) {
             Style style = createBuildingStyle(type.getFillColour(), type.getOutlineColour());
             FeatureLayer layer = new FeatureLayer(gisLoader.getBuildingFeatures(type), style);
             mapContent.addLayer(layer);
         }
 
+        // Add layer for roads
         Style roadStyle = SLD.createLineStyle(java.awt.Color.GRAY, ROAD_STROKE_WIDTH);
         FeatureLayer roadLayer = new FeatureLayer(gisLoader.getRoadFeatures(), roadStyle);
         mapContent.addLayer(roadLayer);
@@ -127,14 +167,21 @@ public class Map extends StackPane {
         centreY = mapContent.getMaxBounds().getCenterY();
     }
 
+    /**
+     * Create the visualisation style for a building with the given colours
+     * 
+     * @param fillColour    Building fill colour
+     * @param outlineColour Building outline colour
+     * @return Building style
+     */
     private Style createBuildingStyle(String fillColour, String outlineColour) {
         StyleFactory styleFactory = CommonFactoryFinder.getStyleFactory();
         FilterFactory filterFactory = CommonFactoryFinder.getFilterFactory();
 
+        // Create fill and stroke styles
         Fill fill = styleFactory.createFill(
                 filterFactory.literal(fillColour),
                 filterFactory.literal(1.0));
-
         Stroke stroke = styleFactory.createStroke(
                 filterFactory.literal(outlineColour),
                 filterFactory.literal(BUILDING_STROKE_WIDTH));
@@ -152,6 +199,9 @@ public class Map extends StackPane {
         return style;
     }
 
+    /**
+     * Draw the environment on the map
+     */
     private void drawEnvironment() {
         GraphicsContext gc = environmentCanvas.getGraphicsContext2D();
         gc.clearRect(0, 0, RESOLUTION, RESOLUTION);
@@ -163,6 +213,9 @@ public class Map extends StackPane {
         draw.paint(graphics, mapRect, mapContent.getViewport().getBounds());
     }
 
+    /**
+     * Draw the population on the map
+     */
     private void drawPopulation() {
         if (!visualisation) {
             return;
@@ -184,6 +237,9 @@ public class Map extends StackPane {
         }
     }
 
+    /**
+     * Reset the map to its default state
+     */
     private void resetMap() {
         // Reset scale
         scaleFactor = Math.max(getWidth(), getHeight()) / RESOLUTION;
@@ -198,7 +254,9 @@ public class Map extends StackPane {
         resizeMap();
     }
 
-    // Update map to keep focus centred when resizing
+    /**
+     * Resize the map to fit the current window size
+     */
     public void resizeMap() {
         environmentCanvas.setTranslateX(getWidth() / 2 - focusX * RESOLUTION);
         environmentCanvas.setTranslateY(getHeight() / 2 - focusY * RESOLUTION);
@@ -214,6 +272,9 @@ public class Map extends StackPane {
         populationCanvas.setScaleY(scaleFactor);
     }
 
+    /**
+     * Initialise mouse controls to pan and zoom the map
+     */
     private void initialiseControls() {
 
         // Record start position on mouse press down
@@ -305,6 +366,9 @@ public class Map extends StackPane {
         });
     }
 
+    /**
+     * Create the map legend
+     */
     private void initialiseLegend() {
         Platform.runLater(() -> {
             setAlignment(legend, Pos.TOP_RIGHT);
@@ -317,6 +381,7 @@ public class Map extends StackPane {
                 }
             });
 
+            // Create building function key
             VBox buildings = new VBox();
             Label buildingsLabel = new Label("Buildings");
             buildingsLabel.getStyleClass().add("bold");
@@ -337,6 +402,7 @@ public class Map extends StackPane {
                 buildings.getChildren().add(key);
             }
 
+            // Create disease state key
             VBox individuals = new VBox();
             Label individualsLabel = new Label("Individuals");
             individualsLabel.getStyleClass().add("bold");

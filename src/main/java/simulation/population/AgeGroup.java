@@ -1,5 +1,8 @@
 package simulation.population;
 
+/**
+ * Enum class for age groups
+ */
 public enum AgeGroup {
     _0_TO_9(0, 9),
     _10_TO_19(10, 19),
@@ -15,19 +18,41 @@ public enum AgeGroup {
     private int minAge;
     private int maxAge;
 
+    /**
+     * Construct an age group
+     * 
+     * @param minAge Minimum age
+     * @param maxAge Maximum age
+     */
     AgeGroup(int minAge, int maxAge) {
         this.minAge = minAge;
         this.maxAge = maxAge;
     }
 
+    /**
+     * Get the minimum age of the age group
+     * 
+     * @return Minimum age
+     */
     public int getMinAge() {
         return minAge;
     }
 
+    /**
+     * Get the maximum age of the age group
+     * 
+     * @return Maximum age
+     */
     public int getMaxAge() {
         return maxAge;
     }
 
+    /**
+     * Find an individual's age group given on their exact age
+     * 
+     * @param age Age of the individual
+     * @return Age group of the individual
+     */
     public static AgeGroup getAgeGroup(int age) {
         return AgeGroup.values()[age / 10];
     }

@@ -11,10 +11,14 @@ import javafx.scene.layout.Region;
 import simulation.core.Simulation;
 import simulation.core.SimulationState;
 
+/**
+ * Class for the UI's top control panel
+ */
 public class Controls extends HBox {
 
     private Simulation simulation;
 
+    // UI elements
     private Button playPauseButton;
     private Button resetButton;
     private Label speedValueLabel;
@@ -24,9 +28,15 @@ public class Controls extends HBox {
     private Label dayLabel;
     private Label timeLabel;
 
+    /**
+     * Construct the control panel
+     * 
+     * @param simulation Simulation
+     */
     public Controls(Simulation simulation) {
         this.simulation = simulation;
 
+        // Play/pause button
         playPauseButton = new Button("Play");
         playPauseButton.getStyleClass().add("accent");
         playPauseButton.setMinWidth(Region.USE_PREF_SIZE);
@@ -41,6 +51,7 @@ public class Controls extends HBox {
             playPauseButton.getParent().requestFocus();
         });
 
+        // Reset button
         resetButton = new Button("Reset");
         resetButton.getStyleClass().add("accent");
         resetButton.setMinWidth(Region.USE_PREF_SIZE);
@@ -53,6 +64,7 @@ public class Controls extends HBox {
         HBox controlButtons = new HBox(playPauseButton, resetButton);
         controlButtons.setAlignment(Pos.CENTER);
 
+        // Speed slider
         Label speedLabel = new Label("Speed");
         speedSlider = new Slider(1, 37, 1);
         speedSlider.setMajorTickUnit(1);
@@ -68,35 +80,54 @@ public class Controls extends HBox {
         HBox speedControls = new HBox(10, speedLabel, speedSlider, speedValueLabel);
         speedControls.setAlignment(Pos.CENTER);
 
+        // Live visualisation toggle
         visualisationToggle = new CheckBox("Live Visualisation");
         visualisationToggle.setSelected(true);
         visualisationToggle.setDisable(true);
 
+        // Control box
         HBox controls = new HBox(20, controlButtons, speedControls, visualisationToggle);
         controls.setMinWidth(Region.USE_PREF_SIZE);
         controls.setAlignment(Pos.CENTER);
 
+        // Run counter
         runLabel = new Label();
         runLabel.setMinWidth(50);
+
+        // Day counter
         dayLabel = new Label();
         dayLabel.setMinWidth(50);
+
+        // Clock
         timeLabel = new Label();
         timeLabel.setMinWidth(50);
+
+        // Progess display
         HBox progress = new HBox(20, runLabel, dayLabel, timeLabel);
         progress.getStyleClass().add("big-text");
         progress.setMinWidth(Region.USE_PREF_SIZE);
         progress.setAlignment(Pos.CENTER_RIGHT);
 
+        // Control panel
         HBox.setHgrow(progress, Priority.ALWAYS);
         setAlignment(Pos.CENTER);
         getChildren().addAll(controls, progress);
     }
 
+    /**
+     * Get the live visualisation toggle
+     * 
+     * @return Live visualisation checkbox
+     */
     public CheckBox getVisualisationToggle() {
         return visualisationToggle;
     }
 
+    /**
+     * Update the control panel on simulation state change
+     */
     public void update() {
+        // Disable/enable controls depending on state
         switch (simulation.getState()) {
             case UNINITIALISED:
                 playPauseButton.setDisable(true);
@@ -127,15 +158,24 @@ public class Controls extends HBox {
                 break;
         }
 
+        // Update run label
         int runs = simulation.getParameters().getRuns().getValue();
         runLabel.setText("Run " + Math.min(simulation.getRun() + 1, runs) + " / " + runs);
 
+        // Update day label
         int days = simulation.getParameters().getDuration().getValue();
         dayLabel.setText("Day " + Math.min(simulation.getDay() + 1, days) + " / " + days);
 
+        // Update time label
         timeLabel.setText(formatTime(simulation.getTime()));
     }
 
+    /**
+     * Format time in HH:MM am/pm format
+     * 
+     * @param time Time in seconds since midnight
+     * @return Formatted time string
+     */
     private String formatTime(int time) {
         int hours = time / 3600;
         int minutes = (time % 3600) / 60;
@@ -147,7 +187,13 @@ public class Controls extends HBox {
         return String.format("%02d:%02d %s", hours, minutes, period);
     }
 
-    // Get speed using an exponential scale for better control of small speed values
+    /**
+     * Get the speed from the slider value
+     * Uses an exponential scale for better control of small speed values
+     * 
+     * @param sliderValue Slider value
+     * @return Speed value
+     */
     private int getSpeed(int sliderValue) {
         return (int) (((sliderValue - 1) % 9 + 1) * Math.pow(10, (sliderValue - 1) / 9));
     }

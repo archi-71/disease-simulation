@@ -7,10 +7,14 @@ import org.geotools.api.filter.Filter;
 import org.geotools.api.filter.FilterFactory;
 import org.geotools.factory.CommonFactoryFinder;
 
+/**
+ * Class to create filters for different building types
+ */
 public class FeatureFilters {
 
     private FilterFactory F;
 
+    // Filters for each building ypes
     private Filter residentialFilter;
     private Filter schoolFilter;
     private Filter universityFilter;
@@ -20,38 +24,73 @@ public class FeatureFilters {
     private Filter nonEssentialAmenitiesFilter;
     private Filter nonEssentialWorkplacesFilter;
 
+    /**
+     * Get the filter for residential buildings
+     * @return Residential filter
+     */
     public Filter getResidentialFilter() {
         return residentialFilter;
     }
 
+    /**
+     * Get the filter for school buildings
+     * @return School filter
+     */
     public Filter getSchoolFilter() {
         return schoolFilter;
     }
 
+    /**
+     * Get the filter for university buildings
+     * @return University filter
+     */
     public Filter getUniversityFilter() {
         return universityFilter;
     }
-
+    
+    /**
+     * Get the filter for hospital buildings
+     * @return Hospital filter
+     */
     public Filter getHospitalFilter() {
         return hospitalFilter;
     }
 
+    /**
+     * Get the filter for essential amenities
+     * @return Essential amenity filter
+     */
     public Filter getEssentialAmenitiesFilter() {
         return essentialAmenitiesFilter;
     }
 
+    /**
+     * Get the filter for essential workplaces
+     * @return Essential workplace filter
+     */
     public Filter getEssentialWorkplacesFilter() {
         return essentialWorkplacesFilter;
     }
 
+    /**
+     * Get the filter for non-essential amenities
+     * @return Non-essential amenity filter
+     */
     public Filter getNonEssentialAmenitiesFilter() {
         return nonEssentialAmenitiesFilter;
     }
 
+    /**
+     * Get the filter for non-essential workplaces
+     * @return Non-essential workplace filter
+     */
     public Filter getNonEssentialWorkplacesFilter() {
         return nonEssentialWorkplacesFilter;
     }
 
+    /**
+     * Constructor to create the filters for each building type
+     */
     public FeatureFilters() {
         F = CommonFactoryFinder.getFilterFactory();
         residentialFilter = isResidential();
@@ -64,10 +103,18 @@ public class FeatureFilters {
         nonEssentialWorkplacesFilter = isNonEssentialWorkplace();
     }
 
+    /**
+     * Create a filter to check if a feature is a building
+     * @return Building filter
+     */
     private Filter isBuilding() {
         return F.notEqual(F.property("building"), F.literal(""));
     }
 
+    /**
+     * Create a filter to check if a feature is a residential building
+     * @return Residential filter
+     */
     private Filter isResidential() {
         List<Filter> filters = new ArrayList<>();
         filters.add(F.equals(F.property("building"), F.literal("residential")));
@@ -100,6 +147,10 @@ public class FeatureFilters {
         return F.or(filters);
     }
 
+    /**
+     * Create a filter to check if a feature is a school
+     * @return School filter
+     */
     private Filter isSchool() {
         List<Filter> filters = new ArrayList<>();
         filters.add(F.equals(F.property("building"), F.literal("school")));
@@ -112,6 +163,10 @@ public class FeatureFilters {
         return F.and(isBuilding(), F.or(filters));
     }
 
+    /**
+     * Create a filter to check if a feature is a university
+     * @return University filter
+     */
     private Filter isUniversity() {
         List<Filter> filters = new ArrayList<>();
         filters.add(F.equals(F.property("building"), F.literal("university")));
@@ -120,14 +175,23 @@ public class FeatureFilters {
         return F.and(isBuilding(), F.or(filters));
     }
 
+    /**
+     * Create a filter to check if a feature is a hospital
+     * @return Hospital filter
+     */
     private Filter isHospital() {
         List<Filter> filters = new ArrayList<>();
         filters.add(F.equals(F.property("building"), F.literal("hospital")));
         filters.add(F.equals(F.property("amenity"), F.literal("hospital")));
         filters.add(F.equals(F.property("amenity"), F.literal("clinic")));
+
         return F.and(isBuilding(), F.or(filters));
     }
 
+    /**
+     * Create a filter to check if a feature is an essential amenity
+     * @return Essential amenity filter
+     */
     private Filter isEssentialAmenity() {
         List<Filter> filters = new ArrayList<>();
         filters.add(F.equals(F.property("building"), F.literal("parking")));
@@ -181,6 +245,10 @@ public class FeatureFilters {
         return F.and(isBuilding(), F.or(filters));
     }
 
+    /**
+     * Create a filter to check if a feature is an essential workplace
+     * @return Essential workplace filter
+     */
     private Filter isEssentialWorkplace() {
         List<Filter> filters = new ArrayList<>();
         filters.add(F.equals(F.property("building"), F.literal("bridge")));
@@ -211,6 +279,10 @@ public class FeatureFilters {
         return F.and(isBuilding(), F.or(filters));
     }
 
+    /**
+     * Create a filter to check if a feature is non-essential
+     * @return Non-essential filter
+     */
     private Filter isNonEssential() {
         List<Filter> filters = new ArrayList<>();
         filters.add(F.not(isResidential()));
@@ -223,6 +295,10 @@ public class FeatureFilters {
         return F.and(isBuilding(), F.and(filters));
     }
 
+    /**
+     * Create a filter to check if a feature is a non-essential amenity
+     * @return Non-essential amenity filter
+     */
     private Filter isNonEssentialAmenity() {
         List<Filter> filters = new ArrayList<>();
 
@@ -266,6 +342,10 @@ public class FeatureFilters {
         return F.and(isNonEssential(), F.or(filters));
     }
 
+    /**
+     * Create a filter to check if a feature is a non-essential workplace
+     * @return Non-essential workplace filter
+     */
     private Filter isNonEssentialWorkplace() {
         return F.and(isNonEssential(), F.not(isNonEssentialAmenity()));
     }

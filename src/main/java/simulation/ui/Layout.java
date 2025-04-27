@@ -23,11 +23,18 @@ import simulation.core.Simulation;
 import simulation.core.SimulationState;
 import simulation.params.SimulationParams;
 
+/**
+ * Class for the top-level UI layout of the application
+ */
 public class Layout {
 
+    // Proportion of the screen covered by the overlay dialogue box
     private static final double OVERLAY_SIZE = 0.25;
+
+    // Minimum proportion of the screen occupied for each panel
     private static final double MIN_SPLIT = 0.1;
 
+    // Panel size configuration variables
     private boolean isResizing = false;
     private double verticalSplit = 0.32;
     private double horizontalSplit = 0.5;
@@ -36,6 +43,7 @@ public class Layout {
     private Stage stage;
     private Scene scene;
 
+    // UI components
     private Overlay overlay;
     private ParameterInputs inputParameters;
     private Controls controls;
@@ -44,13 +52,21 @@ public class Layout {
 
     private ScheduledService<Void> service;
 
+    /**
+     * Construct the UI layout
+     * 
+     * @param simulation Simulation
+     * @param stage      Stage reference
+     */
     public Layout(Simulation simulation, Stage stage) {
         this.stage = stage;
         this.simulation = simulation;
         createScene();
         scene.getRoot().requestFocus();
 
+        // Set up the simulation state change callback function
         simulation.setStateChangeCallback(() -> {
+
             // Always show visualisation at the start and end of the simulation
             if (simulation.getState() == SimulationState.INITIALISED && simulation.getRun() == 0
                     || simulation.getState() == SimulationState.FINISHED) {
@@ -103,6 +119,7 @@ public class Layout {
             data.setVisualisation(controls.getVisualisationToggle().isSelected());
         });
 
+        // Update live visualisation when toggled
         controls.getVisualisationToggle().selectedProperty().addListener((obs, wasVisualising, isVisualising) -> {
             map.setVisualisation(isVisualising);
             data.setVisualisation(isVisualising);
@@ -110,10 +127,18 @@ public class Layout {
         });
     }
 
+    /**
+     * Get the scene for the layout
+     * 
+     * @return Scene
+     */
     public Scene getScene() {
         return scene;
     }
 
+    /**
+     * Update all UI components
+     */
     private void updateUI() {
         Platform.runLater(() -> {
             controls.update();
@@ -122,24 +147,27 @@ public class Layout {
         });
     }
 
+    /**
+     * Create application scene, defining the UI layout
+     */
     private void createScene() {
         // Default window size to full screen dimensions
         Rectangle2D screen = Screen.getPrimary().getVisualBounds();
         double width = screen.getWidth();
         double height = screen.getHeight();
 
-        // Create overlay for displaying loading status and alerts
+        // Create overlay for displaying loading/error messages
         overlay = new Overlay(width * OVERLAY_SIZE, height * OVERLAY_SIZE);
 
-        // Create parameters section
+        // Create parameters panel
         VBox parametersSection = new VBox();
         parametersSection.setMinWidth(width * MIN_SPLIT);
-
         inputParameters = new ParameterInputs(stage);
         ScrollPane parameters = new ScrollPane(inputParameters);
         parameters.setFitToWidth(true);
         VBox.setVgrow(parameters, Priority.ALWAYS);
 
+        // Create button to initialise simulation
         Button initialiseSimButton = new Button("Initialise Simulation");
         initialiseSimButton.getStyleClass().add("accent");
         initialiseSimButton.setMinWidth(Region.USE_PREF_SIZE);
@@ -187,44 +215,40 @@ public class Layout {
 
         parametersSection.getChildren().addAll(parameters, initialiseSim);
 
-        // Create controls section
+        // Create controls panel
         controls = new Controls(simulation);
-
         VBox controlsSection = new VBox();
         controlsSection.setAlignment(Pos.CENTER);
         controlsSection.getChildren().add(controls);
 
-        // Create map section
+        // Create map panel
         map = new Map(simulation);
         Pane mapSection = new Pane(map);
         mapSection.setMinHeight(height * MIN_SPLIT);
         map.prefWidthProperty().bind(mapSection.widthProperty());
         map.prefHeightProperty().bind(mapSection.heightProperty());
 
-        // Create data section
+        // Create data panel
         data = new Data(stage, simulation);
-
         VBox dataSection = new VBox();
         dataSection.setMinHeight(height * MIN_SPLIT);
-
         dataSection.getChildren().add(data);
 
-        // Combine map and data sections into output section
+        // Combine map and data panels into output panel
         SplitPane outputSection = new SplitPane(mapSection, dataSection);
         outputSection.setOrientation(Orientation.VERTICAL);
         outputSection.setDividerPositions(horizontalSplit);
 
-        // Combine controls and output sections into right section
+        // Combine controls and output panels into right panel
         VBox rightSection = new VBox(controlsSection, outputSection);
         VBox.setVgrow(outputSection, Priority.ALWAYS);
 
-        // Combine parameters and right sections into layout
+        // Combine parameters and right panels into the full layout
         SplitPane layout = new SplitPane(parametersSection, rightSection);
         layout.setDividerPositions(verticalSplit);
 
-        // Combine layout and overlay into the root
+        // Combine layout and overlay into the root, and create the scene
         StackPane root = new StackPane(layout, overlay);
-
         scene = new Scene(root, width, height);
 
         // Update divider positions when changed by the user
